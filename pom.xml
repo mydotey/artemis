@@ -2,17 +2,17 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.ctrip.soa.artemis</groupId>
+    <groupId>org.mydotey.artemis</groupId>
     <artifactId>artemis</artifactId>
-    <version>1.5.16</version>
+    <version>2.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
-    <name>Artemis</name>
+    <name>artemis</name>
     <description>Ctrip SOA Artemis Service Registry</description>
-    <url>https://ctripcorp.github.io/artemis</url>
+    <url>https://mydotey.github.io/artemis</url>
 
     <organization>
-        <name>Ctrip, Inc.</name>
-        <url>http://www.ctrip.com</url>
+        <name>org.mydotey</name>
+        <url>https://github.com/mydotey</url>
     </organization>
 
     <licenses>
@@ -23,14 +23,14 @@
     </licenses>
 
     <scm>
-        <url>https://github.com/ctripcorp/artemis</url>
-        <connection>scm:git:git://github.com/ctripcorp/artemis.git</connection>
-        <developerConnection>scm:git:ssh://git@github.com/ctripcorp/artemis.git</developerConnection>
+        <url>https://github.com/mydotey/artemis</url>
+        <connection>scm:git:git://github.com/mydotey/artemis.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/mydotey/artemis.git</developerConnection>
     </scm>
 
     <issueManagement>
         <system>github</system>
-        <url>https://github.com/ctripcorp/artemis/issues</url>
+        <url>https://github.com/mydotey/artemis/issues</url>
     </issueManagement>
 
     <developers>
@@ -38,8 +38,8 @@
             <id>koqizhao</id>
             <name>Qiang Zhao</name>
             <email>koqizhao@outlook.com</email>
-            <organization>Ctrip, Inc.</organization>
-            <organizationUrl>http://www.ctrip.com</organizationUrl>
+            <organization>org.mydotey</organization>
+            <organizationUrl>https://github.com/mydotey</organizationUrl>
             <roles>
                 <role>Developer</role>
             </roles>
