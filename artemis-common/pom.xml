@@ -16,16 +16,32 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.ctrip.soa.caravan</groupId>
-            <artifactId>caravan-util</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.mydotey.lang</groupId>
+            <artifactId>lang-extension</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.mydotey.circularbuffer</groupId>
+            <artifactId>circular-buffer</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.mydotey.scf</groupId>
+            <artifactId>scf-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.mydotey.scf</groupId>
+            <artifactId>scf-simple</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.mydotey.codec</groupId>
+            <artifactId>jackson-codec-util</artifactId>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>

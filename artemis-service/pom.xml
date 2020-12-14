@@ -16,12 +16,16 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.ctrip.soa.artemis</groupId>
+            <groupId>org.mydotey.artemis</groupId>
             <artifactId>artemis-common</artifactId>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.mydotey.rpc</groupId>
+            <artifactId>http-rpc-util</artifactId>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>

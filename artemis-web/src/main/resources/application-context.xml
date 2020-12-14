@@ -13,7 +13,7 @@
 
 	<annotation-driven />
 
-	<context:component-scan base-package="com.ctrip.soa.artemis.web" />
+	<context:component-scan base-package="org.mydotey.artemis.web" />
 
 	<resources mapping="/resources/**" location="/resources/" />
 	<resources mapping="swagger-ui.html" location="classpath:/META-INF/resources/"/>

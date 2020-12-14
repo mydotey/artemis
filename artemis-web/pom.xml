@@ -16,11 +16,11 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.ctrip.soa.artemis</groupId>
+            <groupId>org.mydotey.artemis</groupId>
             <artifactId>artemis-service</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.ctrip.soa.artemis</groupId>
+            <groupId>org.mydotey.artemis</groupId>
             <artifactId>artemis-management</artifactId>
         </dependency>
         <dependency>
@@ -34,10 +34,6 @@
         <dependency>
             <groupId>javax.inject</groupId>
             <artifactId>javax.inject</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.ctrip.soa.caravan</groupId>
-            <artifactId>caravan-web</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
@@ -82,6 +78,10 @@
         <dependency>
             <groupId>io.springfox</groupId>
             <artifactId>springfox-swagger-ui</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.github.ziplet</groupId>
+            <artifactId>ziplet</artifactId>
         </dependency>
         <dependency>
             <groupId>javax.servlet</groupId>

@@ -7,7 +7,7 @@
     <version>2.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>artemis</name>
-    <description>Ctrip SOA Artemis Service Registry</description>
+    <description>Artemis Service Registry</description>
     <url>https://mydotey.github.io/artemis</url>
 
     <organization>
@@ -97,10 +97,15 @@
     </developers>
 
     <properties>
-        <java.version>1.7</java.version>
+        <java.version>1.8</java.version>
         <source.encoding>UTF-8</source.encoding>
         <inject.version>1</inject.version>
         <slf4j.version>1.7.21</slf4j.version>
+        <scf.version>1.6.0</scf.version>
+        <lang-extension.version>1.1.2</lang-extension.version>
+        <circular-buffer.version>1.0.0</circular-buffer.version>
+        <codec-util.version>1.1.0</codec-util.version>
+        <rpc-util.version>1.3.0</rpc-util.version>
         <logback.version>1.1.7</logback.version>
         <guava.version>19.0</guava.version>
         <jackson.version>2.9.4</jackson.version>
@@ -110,13 +115,13 @@
         <httpclient.version>4.5.2</httpclient.version>
         <httpcore.version>4.4.5</httpcore.version>
         <spring.version>4.3.4.RELEASE</spring.version>
-        <commons-dbcp2.version>2.1.1</commons-dbcp2.version>
-        <mysql-connector.version>5.1.44</mysql-connector.version>
+        <commons-dbcp2.version>2.8.0</commons-dbcp2.version>
+        <mysql-connector.version>5.1.49</mysql-connector.version>
         <servlet-api.version>3.1.0</servlet-api.version>
         <websocket-api.version>1.1</websocket-api.version>
-        <caravan.version>1.12.0</caravan.version>
         <tomcat.version>7.0.73</tomcat.version>
         <swagger.version>2.6.1</swagger.version>
+        <ziplet.version>2.1.2</ziplet.version>
         <junit.version>4.12</junit.version>
         <mockito.version>1.10.19</mockito.version>
         <maven-compiler-plugin.version>3.7.0</maven-compiler-plugin.version>
@@ -149,6 +154,37 @@
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-api</artifactId>
                 <version>${slf4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.mydotey.lang</groupId>
+                <artifactId>lang-extension</artifactId>
+                <version>${lang-extension.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.mydotey.circularbuffer</groupId>
+                <artifactId>circular-buffer</artifactId>
+                <version>${circular-buffer.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.mydotey.scf</groupId>
+                <artifactId>scf-bom</artifactId>
+                <version>${scf.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.mydotey.codec</groupId>
+                <artifactId>codec-util-bom</artifactId>
+                <version>${codec-util.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.mydotey.rpc</groupId>
+                <artifactId>rpc-util-bom</artifactId>
+                <version>${rpc-util.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
             </dependency>
             <dependency>
                 <groupId>ch.qos.logback</groupId>
@@ -291,47 +327,32 @@
                 <version>${mysql-connector.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.ctrip.soa.caravan</groupId>
-                <artifactId>caravan-common</artifactId>
-                <version>${caravan.version}</version>
+                <groupId>com.github.ziplet</groupId>
+                <artifactId>ziplet</artifactId>
+                <version>${ziplet.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.ctrip.soa.caravan</groupId>
-                <artifactId>caravan-configuration</artifactId>
-                <version>${caravan.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.ctrip.soa.caravan</groupId>
-                <artifactId>caravan-util</artifactId>
-                <version>${caravan.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.ctrip.soa.caravan</groupId>
-                <artifactId>caravan-web</artifactId>
-                <version>${caravan.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.ctrip.soa.artemis</groupId>
+                <groupId>org.mydotey.artemis</groupId>
                 <artifactId>artemis-common</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.ctrip.soa.artemis</groupId>
+                <groupId>org.mydotey.artemis</groupId>
                 <artifactId>artemis-client</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.ctrip.soa.artemis</groupId>
+                <groupId>org.mydotey.artemis</groupId>
                 <artifactId>artemis-service</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.ctrip.soa.artemis</groupId>
+                <groupId>org.mydotey.artemis</groupId>
                 <artifactId>artemis-management</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.ctrip.soa.artemis</groupId>
+                <groupId>org.mydotey.artemis</groupId>
                 <artifactId>artemis-web</artifactId>
                 <version>${project.version}</version>
             </dependency>
