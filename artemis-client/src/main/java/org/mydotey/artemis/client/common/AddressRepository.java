@@ -14,12 +14,12 @@ import org.mydotey.artemis.cluster.GetServiceNodesRequest;
 import org.mydotey.artemis.cluster.GetServiceNodesResponse;
 import org.mydotey.artemis.cluster.ServiceNode;
 import org.mydotey.artemis.config.DeploymentConfig;
-import org.mydotey.artemis.config.RangePropertyConfig;
+import org.mydotey.scf.filter.RangeValueConfig;
 import org.mydotey.artemis.util.DynamicScheduledThread;
 import org.mydotey.artemis.util.DynamicScheduledThreadConfig;
-import org.mydotey.artemis.util.StringUtil;
 import org.mydotey.codec.json.JacksonJsonCodec;
 import org.mydotey.java.StringExtension;
+import org.mydotey.java.io.file.FileExtension;
 import org.mydotey.rpc.client.http.apache.HttpRequestFactory;
 import org.mydotey.rpc.client.http.apache.sync.DynamicPoolingHttpClientProvider;
 import org.mydotey.rpc.client.http.apache.sync.HttpRequestExecutors;
@@ -53,8 +53,8 @@ public class AddressRepository {
         _domainUrl = managerConfig.properties().getStringProperty(clientId + ".service.domain.url", "");
         final DynamicScheduledThreadConfig dynamicScheduledThreadConfig = new DynamicScheduledThreadConfig(
             managerConfig.properties(),
-            new RangePropertyConfig<Integer>(20, 0, 200),
-            new RangePropertyConfig<Integer>(5 * 60 * 1000, 1 * 60 * 1000, 30 * 60 * 1000));
+            new RangeValueConfig<Integer>(20, 0, 200),
+            new RangeValueConfig<Integer>(5 * 60 * 1000, 1 * 60 * 1000, 30 * 60 * 1000));
         _addressesPoller = new DynamicScheduledThread(clientId + ".address-repository", this::refresh,
             dynamicScheduledThreadConfig);
         refresh();
@@ -96,7 +96,7 @@ public class AddressRepository {
                 return addressList;
             }
 
-            final String requestUrl = StringUtil.concatPathParts(url, _path);
+            final String requestUrl = FileExtension.concatPathParts(url, _path);
             HttpEntityEnclosingRequestBase request = HttpRequestFactory.createRequest(
                 requestUrl, HttpPost.METHOD_NAME, _request, JacksonJsonCodec.DEFAULT);
             HttpRequestFactory.gzipRequest(request);

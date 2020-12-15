@@ -8,7 +8,7 @@ import org.mydotey.artemis.config.DeploymentConfig;
 import org.mydotey.scf.ConfigurationManager;
 import org.mydotey.scf.facade.ConfigurationManagers;
 import org.mydotey.scf.facade.StringProperties;
-import org.mydotey.scf.facade.StringPropertySources;
+import org.mydotey.scf.facade.SimpleConfigurationSources;
 import org.mydotey.scf.source.stringproperty.memorymap.MemoryMapConfigurationSource;
 
 /**
@@ -17,7 +17,7 @@ import org.mydotey.scf.source.stringproperty.memorymap.MemoryMapConfigurationSou
 public class ArtemisClientConstants {
 
     public static String Name = "client";
-    public static MemoryMapConfigurationSource MemSource = StringPropertySources.newMemoryMapSource(
+    public static MemoryMapConfigurationSource MemSource = SimpleConfigurationSources.newMemoryMapSource(
         "artemis.client.test.config.source");
     public static StringProperties Properties;
     public static ArtemisClientManagerConfig ManagerConfig;

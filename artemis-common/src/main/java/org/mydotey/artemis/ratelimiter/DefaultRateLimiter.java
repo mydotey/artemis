@@ -4,9 +4,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.mydotey.artemis.config.DefaultValueFilter;
 import org.mydotey.artemis.config.MapValueCorrector;
-import org.mydotey.artemis.config.PropertyKeyGenerator;
+import org.mydotey.scf.util.PropertyKeyGenerator;
 import org.mydotey.java.BooleanExtension;
 import org.mydotey.scf.Property;
 import org.mydotey.scf.facade.StringProperties;
@@ -30,20 +29,21 @@ class DefaultRateLimiter implements RateLimiter {
         RateLimiterConfig rateLimiterConfig) {
         _rateLimiterId = rateLimiterId;
 
-        String propertyKey = PropertyKeyGenerator.generateKey(_rateLimiterId, RateLimiterConfig.ENABLED_PROPERTY_KEY);
+        String propertyKey = PropertyKeyGenerator.generatePropertyKey(_rateLimiterId,
+            RateLimiterConfig.ENABLED_PROPERTY_KEY);
         _enabledProperty = properties.getBooleanProperty(propertyKey, rateLimiterConfig.enabled());
 
-        propertyKey = PropertyKeyGenerator.generateKey(_rateLimiterId,
+        propertyKey = PropertyKeyGenerator.generatePropertyKey(_rateLimiterId,
             RateLimiterConfig.DEFAULT_RATE_LIMIT_PROPERTY_KEY);
         _defaultRateLimitProperty = properties.getLongProperty(propertyKey,
-            rateLimiterConfig.rateLimitPropertyConfig().defaultValue(),
-            rateLimiterConfig.rateLimitPropertyConfig().toValueFilter());
+            rateLimiterConfig.rateLimitPropertyConfig());
 
         PipelineValueFilter<Long> rateLimitValueCorrector = new PipelineValueFilter<>(Arrays.asList(
-            new DefaultValueFilter<>(rateLimiterConfig.rateLimitPropertyConfig().defaultValue()),
-            rateLimiterConfig.rateLimitPropertyConfig().toValueFilter()));
+            rateLimiterConfig.rateLimitPropertyConfig().toDefaultValueFilter(),
+            rateLimiterConfig.rateLimitPropertyConfig().toRangeValueFilter()));
         MapValueCorrector<String, Long> rateLimitMapValueCorrector = new MapValueCorrector<>(rateLimitValueCorrector);
-        propertyKey = PropertyKeyGenerator.generateKey(_rateLimiterId, RateLimiterConfig.RATE_LIMIT_MAP_PROPERTY_KEY);
+        propertyKey = PropertyKeyGenerator.generatePropertyKey(_rateLimiterId,
+            RateLimiterConfig.RATE_LIMIT_MAP_PROPERTY_KEY);
         _rateLimitMapProperty = properties.getMapProperty(propertyKey, new HashMap<>(), StringInplaceConverter.DEFAULT,
             StringToLongConverter.DEFAULT, rateLimitMapValueCorrector);
 

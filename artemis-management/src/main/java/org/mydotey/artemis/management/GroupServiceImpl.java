@@ -4,7 +4,7 @@ import com.google.common.collect.Lists;
 
 import org.mydotey.artemis.ErrorCodes;
 import org.mydotey.artemis.HasResponseStatus;
-import org.mydotey.artemis.config.RangePropertyConfig;
+import org.mydotey.scf.filter.RangeValueConfig;
 import org.mydotey.artemis.management.group.*;
 import org.mydotey.artemis.management.group.model.*;
 import org.mydotey.artemis.management.group.util.*;
@@ -42,7 +42,7 @@ public class GroupServiceImpl implements GroupService {
     private final GroupRepository groupRepository = GroupRepository.getInstance();
     private final RateLimiter rateLimiter = ArtemisRateLimiterManager.Instance.getRateLimiter(
         "artemis.service.management.group",
-        new RateLimiterConfig(true, new RangePropertyConfig<Long>(30L, 1L, 1000L),
+        new RateLimiterConfig(true, new RangeValueConfig<Long>(30L, 1L, 1000L),
             new TimeSequenceCircularBufferConfig.Builder().setTimeWindow(10 * 1000).setBucketTtl(1000).build()));
 
     @Override

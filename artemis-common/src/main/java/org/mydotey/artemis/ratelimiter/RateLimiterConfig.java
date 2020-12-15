@@ -1,6 +1,6 @@
 package org.mydotey.artemis.ratelimiter;
 
-import org.mydotey.artemis.config.RangePropertyConfig;
+import org.mydotey.scf.filter.RangeValueConfig;
 import org.mydotey.java.ObjectExtension;
 import org.mydotey.util.TimeSequenceCircularBufferConfig;
 
@@ -14,10 +14,10 @@ public class RateLimiterConfig {
     public static final String RATE_LIMIT_MAP_PROPERTY_KEY = "rate-limiter.rate-limit-map";
 
     private boolean _enabled;
-    private RangePropertyConfig<Long> _rateLimitPropertyConfig;
+    private RangeValueConfig<Long> _rateLimitPropertyConfig;
     private TimeSequenceCircularBufferConfig _bufferConfig;
 
-    public RateLimiterConfig(boolean enabled, RangePropertyConfig<Long> rateLimitPropertyConfig,
+    public RateLimiterConfig(boolean enabled, RangeValueConfig<Long> rateLimitPropertyConfig,
         TimeSequenceCircularBufferConfig bufferConfig) {
         ObjectExtension.requireNonNull(rateLimitPropertyConfig, "rateLimitPropertyConfig");
         ObjectExtension.requireNonNull(bufferConfig, "bufferConfig");
@@ -31,7 +31,7 @@ public class RateLimiterConfig {
         return _enabled;
     }
 
-    public RangePropertyConfig<Long> rateLimitPropertyConfig() {
+    public RangeValueConfig<Long> rateLimitPropertyConfig() {
         return _rateLimitPropertyConfig;
     }
 

@@ -8,14 +8,11 @@ import org.mydotey.java.ObjectExtension;
 import org.mydotey.java.StringExtension;
 import org.mydotey.java.net.NetworkInterfaceManager;
 import org.mydotey.scf.ConfigurationManager;
-import org.mydotey.scf.ConfigurationManagerConfig;
 import org.mydotey.scf.ConfigurationSource;
 import org.mydotey.scf.Property;
 import org.mydotey.scf.facade.ConfigurationManagers;
 import org.mydotey.scf.facade.StringProperties;
-import org.mydotey.scf.facade.StringPropertySources;
-import org.mydotey.scf.source.stringproperty.propertiesfile.PropertiesFileConfigurationSource;
-import org.mydotey.scf.source.stringproperty.propertiesfile.PropertiesFileConfigurationSourceConfig;
+import org.mydotey.scf.facade.SimpleConfigurationSources;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,29 +41,15 @@ public final class DeploymentConfig {
         _deploymentEnv = System.getProperty(DEPLOYMENT_ENV_PROPERTY_NAME);
         _deploymentEnv = StringExtension.isBlank(_deploymentEnv) ? null : _deploymentEnv.trim().toLowerCase();
 
-        String sourceFileName = PROPERTIES_FILE_NAME;
-        PropertiesFileConfigurationSourceConfig sourceConfig = StringPropertySources
-            .newPropertiesFileSourceConfigBuilder()
-            .setName(sourceFileName).setFileName(sourceFileName).build();
-        PropertiesFileConfigurationSource source = StringPropertySources.newPropertiesFileSource(sourceConfig);
         List<ConfigurationSource> sources = new ArrayList<>();
-        sources.add(source);
+        sources.add(SimpleConfigurationSources.newEnvironmentVariableSource());
+        sources.add(SimpleConfigurationSources.newSystemPropertiesSource());
         if (!StringExtension.isBlank(_deploymentEnv)) {
-            sourceFileName = PROPERTIES_FILE_NAME + "-" + DeploymentConfig.deploymentEnv();
-            sourceConfig = StringPropertySources.newPropertiesFileSourceConfigBuilder()
-                .setName(sourceFileName).setFileName(sourceFileName).build();
-            source = StringPropertySources.newPropertiesFileSource(sourceConfig);
-            sources.add(source);
+            sources.add(SimpleConfigurationSources
+                .newPropertiesFileSource(PROPERTIES_FILE_NAME + "-" + DeploymentConfig.deploymentEnv()));
         }
-
-        sources.add(StringPropertySources.newEnvironmentVariableSource("environment-variables"));
-
-        ConfigurationManagerConfig.Builder managerConfigBuilder = ConfigurationManagers.newConfigBuilder()
-            .setName("deployment");
-        for (int i = 0; i < sources.size(); i++) {
-            managerConfigBuilder.addSource(i, sources.get(i));
-        }
-        ConfigurationManager manager = ConfigurationManagers.newManager(managerConfigBuilder.build());
+        sources.add(SimpleConfigurationSources.newPropertiesFileSource(PROPERTIES_FILE_NAME));
+        ConfigurationManager manager = ConfigurationManagers.newManager("deployment", sources);
         _properties = new StringProperties(manager);
     }
 
@@ -100,8 +83,8 @@ public final class DeploymentConfig {
         _protocol = _protocolProperty.getValue();
         _path = _pathProperty.getValue();
 
-        _machineName = NetworkInterfaceManager.INSTANCE.localhostName();
-        _ip = NetworkInterfaceManager.INSTANCE.localhostIP();
+        _machineName = NetworkInterfaceManager.INSTANCE.hostName();
+        _ip = NetworkInterfaceManager.INSTANCE.hostIP();
 
         logDeploymentInfo();
     }

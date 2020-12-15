@@ -18,8 +18,8 @@ import org.mydotey.artemis.cluster.ServiceNode;
 import org.mydotey.artemis.cluster.ServiceNodeStatus;
 import org.mydotey.artemis.config.ArtemisConfig;
 import org.mydotey.artemis.config.DeploymentConfig;
-import org.mydotey.artemis.config.PropertyComparator;
-import org.mydotey.artemis.config.RangePropertyConfig;
+import org.mydotey.scf.util.PropertyComparator;
+import org.mydotey.scf.filter.RangeValueConfig;
 import org.mydotey.artemis.lease.Lease;
 import org.mydotey.artemis.lease.LeaseManager;
 import org.mydotey.artemis.lease.LeaseUpdateSafeChecker;
@@ -60,7 +60,7 @@ public class StatusServiceImpl implements StatusService {
     }
 
     private RateLimiter _rateLimiter = ArtemisRateLimiterManager.Instance.getRateLimiter("artemis.service.status",
-        new RateLimiterConfig(true, new RangePropertyConfig<Long>(30L, 1L, 10 * 1000L),
+        new RateLimiterConfig(true, new RangeValueConfig<Long>(30L, 1L, 10 * 1000L),
             new TimeSequenceCircularBufferConfig.Builder().setTimeWindow(10 * 1000).setBucketTtl(1000).build()));
 
     private RegistryRepository _registryRepository = RegistryRepository.getInstance();

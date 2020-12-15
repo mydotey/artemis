@@ -7,7 +7,7 @@ import java.util.List;
 import com.google.common.collect.*;
 
 import org.mydotey.artemis.config.ArtemisConfig;
-import org.mydotey.artemis.config.RangePropertyConfig;
+import org.mydotey.scf.filter.RangeValueConfig;
 import org.mydotey.artemis.management.common.OperationContext;
 import org.mydotey.artemis.management.zone.ZoneKey;
 import org.mydotey.artemis.management.zone.ZoneOperations;
@@ -57,8 +57,8 @@ public class ZoneRepository {
     private ZoneRepository() {
         DynamicScheduledThreadConfig dynamicScheduledThreadConfig = new DynamicScheduledThreadConfig(
             ArtemisConfig.properties(),
-            new RangePropertyConfig<Integer>(0, 0, 10 * 1000),
-            new RangePropertyConfig<Integer>(5 * 1000, 10, 60 * 1000));
+            new RangeValueConfig<Integer>(0, 0, 10 * 1000),
+            new RangeValueConfig<Integer>(5 * 1000, 10, 60 * 1000));
         final String cacheRefreshKey = "artemis.management.zone.data.cache-refresher";
         cacheRefresher = new DynamicScheduledThread(cacheRefreshKey, () -> {
             lastRefreshTime = System.currentTimeMillis();

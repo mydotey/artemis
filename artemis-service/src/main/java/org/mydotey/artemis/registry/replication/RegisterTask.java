@@ -2,7 +2,7 @@ package org.mydotey.artemis.registry.replication;
 
 import org.mydotey.artemis.Instance;
 import org.mydotey.artemis.config.ArtemisConfig;
-import org.mydotey.artemis.config.RangeValueFilter;
+import org.mydotey.scf.filter.RangeValueFilter;
 import org.mydotey.artemis.taskdispatcher.TaskErrorCode;
 import org.mydotey.scf.Property;
 

@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.mydotey.artemis.ErrorCodes;
-import org.mydotey.artemis.config.RangePropertyConfig;
+import org.mydotey.scf.filter.RangeValueConfig;
 import org.mydotey.artemis.ratelimiter.ArtemisRateLimiterManager;
 import org.mydotey.artemis.ratelimiter.RateLimiter;
 import org.mydotey.artemis.ratelimiter.RateLimiterConfig;
@@ -36,7 +36,7 @@ public class ClusterServiceImpl implements ClusterService {
     }
 
     private RateLimiter _rateLimiter = ArtemisRateLimiterManager.Instance.getRateLimiter("artemis.service.cluster",
-        new RateLimiterConfig(true, new RangePropertyConfig<Long>(10 * 1000L, 100L, 100 * 1000L),
+        new RateLimiterConfig(true, new RangeValueConfig<Long>(10 * 1000L, 100L, 100 * 1000L),
             new TimeSequenceCircularBufferConfig.Builder().setTimeWindow(10 * 1000L).setBucketTtl(1000L).build()));
 
     private ClusterServiceImpl() {

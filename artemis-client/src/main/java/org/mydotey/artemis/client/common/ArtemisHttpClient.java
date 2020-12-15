@@ -7,7 +7,7 @@ import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.client.methods.HttpPost;
 import org.mydotey.artemis.HasResponseStatus;
 import org.mydotey.artemis.ResponseStatus;
-import org.mydotey.artemis.config.RangeValueFilter;
+import org.mydotey.scf.filter.RangeValueFilter;
 import org.mydotey.artemis.metric.EventMetric;
 import org.mydotey.artemis.metric.EventMetricManager;
 import org.mydotey.artemis.metric.MetricConfig;

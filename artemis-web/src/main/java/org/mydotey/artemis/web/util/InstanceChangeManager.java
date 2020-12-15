@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.mydotey.artemis.InstanceChange;
 import org.mydotey.artemis.checker.ValueCheckers;
 import org.mydotey.artemis.config.ArtemisConfig;
-import org.mydotey.artemis.config.RangeValueFilter;
+import org.mydotey.scf.filter.RangeValueFilter;
 import org.mydotey.artemis.management.ManagementRepository;
 import org.mydotey.artemis.registry.RegistryRepository;
 import org.mydotey.scf.Property;

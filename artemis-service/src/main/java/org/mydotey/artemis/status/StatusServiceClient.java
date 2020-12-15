@@ -4,12 +4,12 @@ import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.client.methods.HttpPost;
 import org.mydotey.artemis.config.ArtemisConfig;
-import org.mydotey.artemis.config.RangeValueFilter;
+import org.mydotey.scf.filter.RangeValueFilter;
 import org.mydotey.artemis.config.RestPaths;
 import org.mydotey.artemis.trace.ArtemisTraceExecutor;
-import org.mydotey.artemis.util.StringUtil;
 import org.mydotey.codec.json.JacksonJsonCodec;
 import org.mydotey.java.ObjectExtension;
+import org.mydotey.java.io.file.FileExtension;
 import org.mydotey.rpc.client.http.apache.HttpRequestFactory;
 import org.mydotey.rpc.client.http.apache.sync.DynamicPoolingHttpClientProvider;
 import org.mydotey.rpc.client.http.apache.sync.HttpRequestExecutors;
@@ -42,7 +42,7 @@ public class StatusServiceClient implements StatusService {
     public GetClusterNodeStatusResponse getClusterNodeStatus(final GetClusterNodeStatusRequest request) {
         return ArtemisTraceExecutor.INSTANCE.execute("artemis.client.status.get-cluster-node",
             () -> {
-                String requestUrl = StringUtil.concatPathParts(_serviceUrl, RestPaths.STATUS_NODE_FULL_PATH);
+                String requestUrl = FileExtension.concatPathParts(_serviceUrl, RestPaths.STATUS_NODE_FULL_PATH);
                 HttpEntityEnclosingRequestBase httpRequest = HttpRequestFactory.createRequest(
                     requestUrl, HttpPost.METHOD_NAME, request, JacksonJsonCodec.DEFAULT);
                 HttpRequestFactory.gzipRequest(httpRequest);
@@ -55,7 +55,7 @@ public class StatusServiceClient implements StatusService {
     public GetClusterStatusResponse getClusterStatus(final GetClusterStatusRequest request) {
         return ArtemisTraceExecutor.INSTANCE.execute("artemis.client.status.get-cluster",
             () -> {
-                String requestUrl = StringUtil.concatPathParts(_serviceUrl,
+                String requestUrl = FileExtension.concatPathParts(_serviceUrl,
                     RestPaths.STATUS_CLUSTER_FULL_PATH);
                 RequestConfig config = RequestConfig.custom()
                     .setSocketTimeout(_getClusterNodeStatusSocketTimeoutProperty.getValue().intValue()).build();
@@ -72,7 +72,7 @@ public class StatusServiceClient implements StatusService {
     public GetLeasesStatusResponse getLeasesStatus(final GetLeasesStatusRequest request) {
         return ArtemisTraceExecutor.INSTANCE.execute("artemis.client.status.get-leases",
             () -> {
-                String requestUrl = StringUtil.concatPathParts(_serviceUrl, RestPaths.STATUS_LEASES_FULL_PATH);
+                String requestUrl = FileExtension.concatPathParts(_serviceUrl, RestPaths.STATUS_LEASES_FULL_PATH);
                 RequestConfig config = RequestConfig.custom()
                     .setSocketTimeout(_getLeasesSocketTimeoutProperty.getValue().intValue()).build();
                 HttpEntityEnclosingRequestBase httpRequest = HttpRequestFactory.createRequest(
@@ -88,7 +88,7 @@ public class StatusServiceClient implements StatusService {
     public GetLeasesStatusResponse getLegacyLeasesStatus(final GetLeasesStatusRequest request) {
         return ArtemisTraceExecutor.INSTANCE.execute("artemis.client.status.get-legacy-leases",
             () -> {
-                String requestUrl = StringUtil.concatPathParts(_serviceUrl,
+                String requestUrl = FileExtension.concatPathParts(_serviceUrl,
                     RestPaths.STATUS_LEGACY_LEASES_FULL_PATH);
                 RequestConfig config = RequestConfig.custom()
                     .setSocketTimeout(_getLeasesSocketTimeoutProperty.getValue().intValue()).build();
@@ -105,7 +105,7 @@ public class StatusServiceClient implements StatusService {
     public GetConfigStatusResponse getConfigStatus(final GetConfigStatusRequest request) {
         return ArtemisTraceExecutor.INSTANCE.execute("artemis.client.status.get-config",
             () -> {
-                String requestUrl = StringUtil.concatPathParts(_serviceUrl, RestPaths.STATUS_CONFIG_FULL_PATH);
+                String requestUrl = FileExtension.concatPathParts(_serviceUrl, RestPaths.STATUS_CONFIG_FULL_PATH);
                 HttpEntityEnclosingRequestBase httpRequest = HttpRequestFactory.createRequest(
                     requestUrl, HttpPost.METHOD_NAME, request, JacksonJsonCodec.DEFAULT);
                 HttpRequestFactory.gzipRequest(httpRequest);
@@ -118,7 +118,7 @@ public class StatusServiceClient implements StatusService {
     public GetDeploymentStatusResponse getDeploymentStatus(final GetDeploymentStatusRequest request) {
         return ArtemisTraceExecutor.INSTANCE.execute("artemis.client.status.get-deployment",
             () -> {
-                String requestUrl = StringUtil.concatPathParts(_serviceUrl,
+                String requestUrl = FileExtension.concatPathParts(_serviceUrl,
                     RestPaths.STATUS_DEPLOYMENT_FULL_PATH);
                 HttpEntityEnclosingRequestBase httpRequest = HttpRequestFactory.createRequest(
                     requestUrl, HttpPost.METHOD_NAME, request, JacksonJsonCodec.DEFAULT);

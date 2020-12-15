@@ -8,7 +8,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.mydotey.artemis.config.ArtemisConfig;
-import org.mydotey.artemis.config.RangeValueFilter;
+import org.mydotey.scf.filter.RangeValueFilter;
 import org.mydotey.artemis.trace.ArtemisTraceExecutor;
 import org.mydotey.java.ObjectExtension;
 import org.mydotey.scf.Property;

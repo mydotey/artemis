@@ -1,6 +1,6 @@
 package org.mydotey.artemis.util;
 
-import org.mydotey.artemis.config.RangePropertyConfig;
+import org.mydotey.scf.filter.RangeValueConfig;
 import org.mydotey.java.ObjectExtension;
 import org.mydotey.scf.facade.StringProperties;
 
@@ -13,12 +13,12 @@ public class DynamicScheduledThreadConfig {
     public static final String RUN_INTERVAL_PROPERTY_KEY = "dynamic-scheduled-thread.run-interval";
 
     private StringProperties _properties;
-    private RangePropertyConfig<Integer> _initDelayRange;
-    private RangePropertyConfig<Integer> _runIntervalRange;
+    private RangeValueConfig<Integer> _initDelayRange;
+    private RangeValueConfig<Integer> _runIntervalRange;
 
     public DynamicScheduledThreadConfig(StringProperties properties,
-        RangePropertyConfig<Integer> initDelayRange,
-        RangePropertyConfig<Integer> runIntervalRange) {
+        RangeValueConfig<Integer> initDelayRange,
+        RangeValueConfig<Integer> runIntervalRange) {
         ObjectExtension.requireNonNull(properties, "properties");
         ObjectExtension.requireNonNull(initDelayRange, "initDelayRange");
         ObjectExtension.requireNonNull(initDelayRange.defaultValue(), "initDelayRange.defaultValue");
@@ -34,11 +34,11 @@ public class DynamicScheduledThreadConfig {
         return _properties;
     }
 
-    public RangePropertyConfig<Integer> initDelayRange() {
+    public RangeValueConfig<Integer> initDelayRange() {
         return _initDelayRange;
     }
 
-    public RangePropertyConfig<Integer> runIntervalRange() {
+    public RangeValueConfig<Integer> runIntervalRange() {
         return _runIntervalRange;
     }
 

@@ -4,7 +4,7 @@ import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.client.methods.HttpPost;
 import org.mydotey.artemis.config.ArtemisConfig;
-import org.mydotey.artemis.config.RangeValueFilter;
+import org.mydotey.scf.filter.RangeValueFilter;
 import org.mydotey.artemis.config.RestPaths;
 import org.mydotey.artemis.registry.HeartbeatRequest;
 import org.mydotey.artemis.registry.HeartbeatResponse;
@@ -13,8 +13,8 @@ import org.mydotey.artemis.registry.RegisterResponse;
 import org.mydotey.artemis.registry.UnregisterRequest;
 import org.mydotey.artemis.registry.UnregisterResponse;
 import org.mydotey.artemis.trace.ArtemisTraceExecutor;
-import org.mydotey.artemis.util.StringUtil;
 import org.mydotey.codec.json.JacksonJsonCodec;
+import org.mydotey.java.io.file.FileExtension;
 import org.mydotey.rpc.client.http.apache.HttpRequestFactory;
 import org.mydotey.rpc.client.http.apache.sync.DynamicPoolingHttpClientProvider;
 import org.mydotey.rpc.client.http.apache.sync.HttpRequestExecutors;
@@ -46,7 +46,7 @@ public class RegistryReplicationServiceClient implements RegistryReplicationServ
     public HeartbeatResponse heartbeat(final HeartbeatRequest request) {
         return ArtemisTraceExecutor.INSTANCE.execute("artemis.client.registry.replication.heartbeat",
             () -> {
-                String requestUrl = StringUtil.concatPathParts(_serviceUrl,
+                String requestUrl = FileExtension.concatPathParts(_serviceUrl,
                     RestPaths.REPLICATION_REGISTRY_HEARTBEAT_FULL_PATH);
                 RequestConfig config = RequestConfig.custom()
                     .setSocketTimeout(_heartbeatSocketTimeoutProperty.getValue().intValue()).build();
@@ -63,7 +63,7 @@ public class RegistryReplicationServiceClient implements RegistryReplicationServ
     public RegisterResponse register(final RegisterRequest request) {
         return ArtemisTraceExecutor.INSTANCE.execute("artemis.client.registry.replication.register",
             () -> {
-                String requestUrl = StringUtil.concatPathParts(_serviceUrl,
+                String requestUrl = FileExtension.concatPathParts(_serviceUrl,
                     RestPaths.REPLICATION_REGISTRY_REGISTER_FULL_PATH);
                 HttpEntityEnclosingRequestBase httpRequest = HttpRequestFactory.createRequest(
                     requestUrl, HttpPost.METHOD_NAME, request, JacksonJsonCodec.DEFAULT);
@@ -77,7 +77,7 @@ public class RegistryReplicationServiceClient implements RegistryReplicationServ
     public UnregisterResponse unregister(final UnregisterRequest request) {
         return ArtemisTraceExecutor.INSTANCE.execute("artemis.client.registry.replication.unregister",
             () -> {
-                String requestUrl = StringUtil.concatPathParts(_serviceUrl,
+                String requestUrl = FileExtension.concatPathParts(_serviceUrl,
                     RestPaths.REPLICATION_REGISTRY_UNREGISTER_FULL_PATH);
                 HttpEntityEnclosingRequestBase httpRequest = HttpRequestFactory.createRequest(
                     requestUrl, HttpPost.METHOD_NAME, request, JacksonJsonCodec.DEFAULT);
@@ -91,7 +91,7 @@ public class RegistryReplicationServiceClient implements RegistryReplicationServ
     public GetServicesResponse getServices(final GetServicesRequest request) {
         return ArtemisTraceExecutor.INSTANCE.execute("artemis.client.registry.replication.get-applications",
             () -> {
-                String requestUrl = StringUtil.concatPathParts(_serviceUrl,
+                String requestUrl = FileExtension.concatPathParts(_serviceUrl,
                     RestPaths.REPLICATION_REGISTRY_GET_SERVICES_FULL_PATH);
                 RequestConfig config = RequestConfig.custom()
                     .setSocketTimeout(_getApplicationsSocketTimeoutProperty.getValue().intValue())

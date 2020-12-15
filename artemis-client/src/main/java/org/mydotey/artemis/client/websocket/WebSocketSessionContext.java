@@ -10,8 +10,8 @@ import javax.websocket.WebSocketContainer;
 import org.mydotey.artemis.client.common.AddressContext;
 import org.mydotey.artemis.client.common.AddressManager;
 import org.mydotey.artemis.client.common.ArtemisClientConfig;
-import org.mydotey.artemis.config.RangePropertyConfig;
-import org.mydotey.artemis.config.RangeValueFilter;
+import org.mydotey.scf.filter.RangeValueConfig;
+import org.mydotey.scf.filter.RangeValueFilter;
 import org.mydotey.artemis.ratelimiter.RateLimiter;
 import org.mydotey.artemis.ratelimiter.RateLimiterConfig;
 import org.mydotey.artemis.util.DynamicScheduledThread;
@@ -103,13 +103,13 @@ public abstract class WebSocketSessionContext {
             }
         };
         rateLimiter = config.getRateLimiterManager().getRateLimiter(config.key("websocket-session.reconnect-times"),
-            new RateLimiterConfig(true, new RangePropertyConfig<Long>(5L, 3L, 60L),
+            new RateLimiterConfig(true, new RangeValueConfig<Long>(5L, 3L, 60L),
                 new TimeSequenceCircularBufferConfig.Builder().setTimeWindow(20 * 1000).setBucketTtl(2 * 1000)
                     .build()));
 
         final DynamicScheduledThreadConfig dynamicScheduledThreadConfig = new DynamicScheduledThreadConfig(
             config.properties(),
-            new RangePropertyConfig<Integer>(20, 0, 200), new RangePropertyConfig<Integer>(1000, 100, 10 * 60 * 1000));
+            new RangeValueConfig<Integer>(20, 0, 200), new RangeValueConfig<Integer>(1000, 100, 10 * 60 * 1000));
         _healthChecker = new DynamicScheduledThread(config.key("websocket-session.health-check"), new Runnable() {
             @Override
             public void run() {

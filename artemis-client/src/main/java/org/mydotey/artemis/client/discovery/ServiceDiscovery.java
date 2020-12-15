@@ -8,8 +8,8 @@ import org.mydotey.artemis.InstanceChange;
 import org.mydotey.artemis.Service;
 import org.mydotey.artemis.client.common.ArtemisClientConfig;
 import org.mydotey.artemis.client.websocket.WebSocketSessionContext;
-import org.mydotey.artemis.config.RangePropertyConfig;
-import org.mydotey.artemis.config.RangeValueFilter;
+import org.mydotey.scf.filter.RangeValueConfig;
+import org.mydotey.scf.filter.RangeValueFilter;
 import org.mydotey.artemis.discovery.DiscoveryConfig;
 import org.mydotey.artemis.util.DynamicScheduledThread;
 import org.mydotey.artemis.util.DynamicScheduledThreadConfig;
@@ -66,8 +66,8 @@ public class ServiceDiscovery {
 
         final DynamicScheduledThreadConfig dynamicScheduledThreadConfig = new DynamicScheduledThreadConfig(
             config.properties(),
-            new RangePropertyConfig<Integer>(0, 0, 200),
-            new RangePropertyConfig<Integer>(60 * 1000, 60 * 1000, 24 * 60 * 60 * 1000));
+            new RangeValueConfig<Integer>(0, 0, 200),
+            new RangeValueConfig<Integer>(60 * 1000, 60 * 1000, 24 * 60 * 60 * 1000));
         poller = new DynamicScheduledThread(config.key("service-discovery"), () -> {
             try {
                 reload(getReloadDiscoveryConfigs());

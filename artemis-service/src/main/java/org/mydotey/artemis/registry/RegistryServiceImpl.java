@@ -1,7 +1,7 @@
 package org.mydotey.artemis.registry;
 
 import org.mydotey.artemis.Instance;
-import org.mydotey.artemis.config.RangePropertyConfig;
+import org.mydotey.scf.filter.RangeValueConfig;
 import org.mydotey.artemis.ratelimiter.ArtemisRateLimiterManager;
 import org.mydotey.artemis.ratelimiter.RateLimiter;
 import org.mydotey.artemis.ratelimiter.RateLimiterConfig;
@@ -35,7 +35,7 @@ public class RegistryServiceImpl implements RegistryService {
     private RegistryRepository _repository = RegistryRepository.getInstance();
 
     private RateLimiter _rateLimiter = ArtemisRateLimiterManager.Instance.getRateLimiter("artemis.service.registry",
-        new RateLimiterConfig(true, new RangePropertyConfig<Long>(100 * 1000L, 1000L, 1000 * 1000L),
+        new RateLimiterConfig(true, new RangeValueConfig<Long>(100 * 1000L, 1000L, 1000 * 1000L),
             new TimeSequenceCircularBufferConfig.Builder().setTimeWindow(10 * 1000).setBucketTtl(1000).build()));
 
     private RegistryServiceImpl() {

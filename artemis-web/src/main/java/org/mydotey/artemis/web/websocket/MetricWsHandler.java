@@ -16,8 +16,8 @@ import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import org.mydotey.artemis.config.ArtemisConfig;
-import org.mydotey.artemis.config.RangePropertyConfig;
-import org.mydotey.artemis.config.RangeValueFilter;
+import org.mydotey.scf.filter.RangeValueConfig;
+import org.mydotey.scf.filter.RangeValueFilter;
 import org.mydotey.artemis.metric.MetricLoggerHelper;
 import org.mydotey.artemis.util.DynamicScheduledThread;
 import org.mydotey.artemis.util.DynamicScheduledThreadConfig;
@@ -38,8 +38,8 @@ public class MetricWsHandler extends TextWebSocketHandler {
     public MetricWsHandler() {
         final DynamicScheduledThreadConfig dynamicScheduledThreadConfig = new DynamicScheduledThreadConfig(
             ArtemisConfig.properties(),
-            new RangePropertyConfig<Integer>(20, 0, 200),
-            new RangePropertyConfig<Integer>(60 * 1000, 10 * 1000, 60 * 60 * 1000));
+            new RangeValueConfig<Integer>(20, 0, 200),
+            new RangeValueConfig<Integer>(60 * 1000, 10 * 1000, 60 * 60 * 1000));
         sessionTTL = ArtemisConfig.properties().getIntProperty("artemis.service.websocket.session.ttl", 6 * 60 * 1000,
             new RangeValueFilter<>(5 * 60 * 1000, 5 * 60 * 60 * 1000));
         _healthChecker = new DynamicScheduledThread("artemis.service.websocket.session.health-checker", new Runnable() {

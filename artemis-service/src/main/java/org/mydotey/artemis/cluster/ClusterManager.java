@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.mydotey.artemis.Zone;
 import org.mydotey.artemis.config.ArtemisConfig;
 import org.mydotey.artemis.config.DeploymentConfig;
-import org.mydotey.artemis.config.RangeValueFilter;
+import org.mydotey.scf.filter.RangeValueFilter;
 import org.mydotey.artemis.status.GetClusterNodeStatusRequest;
 import org.mydotey.artemis.status.GetClusterNodeStatusResponse;
 import org.mydotey.artemis.status.StatusServiceClient;

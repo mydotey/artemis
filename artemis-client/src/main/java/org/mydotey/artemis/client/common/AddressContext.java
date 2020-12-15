@@ -4,8 +4,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Pattern;
 
 import org.mydotey.artemis.client.ArtemisClientManagerConfig;
-import org.mydotey.artemis.util.StringUtil;
 import org.mydotey.java.StringExtension;
+import org.mydotey.java.io.file.FileExtension;
 import org.mydotey.scf.Property;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,7 +40,7 @@ public class AddressContext {
             _webSocketEndpoint = StringExtension.EMPTY;
         } else {
             _httpUrl = httpUrl;
-            _webSocketEndpoint = StringUtil.concatPathParts(_httpSchema.matcher(httpUrl).replaceAll(_wsPrefix),
+            _webSocketEndpoint = FileExtension.concatPathParts(_httpSchema.matcher(httpUrl).replaceAll(_wsPrefix),
                 wsEndpointSuffix);
             _available.set(true);
         }
@@ -51,7 +51,7 @@ public class AddressContext {
     }
 
     public String customHttpUrl(final String path) {
-        return StringUtil.concatPathParts(getHttpUrl(), path);
+        return FileExtension.concatPathParts(getHttpUrl(), path);
     }
 
     public String getWebSocketEndPoint() {

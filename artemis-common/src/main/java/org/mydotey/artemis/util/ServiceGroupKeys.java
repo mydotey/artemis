@@ -10,6 +10,7 @@ import org.mydotey.artemis.Zone;
 import org.mydotey.artemis.checker.ValueCheckers;
 import org.mydotey.java.ObjectExtension;
 import org.mydotey.java.StringExtension;
+import org.mydotey.java.io.file.FileExtension;
 
 import com.google.common.base.Splitter;
 
@@ -53,7 +54,7 @@ public final class ServiceGroupKeys {
     public static ServiceGroupKey of(String... groupIds) {
         ValueCheckers.notNullOrEmpty(groupIds, "groupIds");
 
-        String groupKey = StringExtension.toLowerCase(StringUtil.concatPathParts(groupIds));
+        String groupKey = StringExtension.toLowerCase(FileExtension.concatPathParts(groupIds));
         return new ServiceGroupKey(groupKey);
     }
 

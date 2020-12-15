@@ -11,9 +11,9 @@ import org.mydotey.artemis.registry.RegistryService;
 import org.mydotey.artemis.registry.UnregisterRequest;
 import org.mydotey.artemis.registry.UnregisterResponse;
 import org.mydotey.artemis.trace.ArtemisTraceExecutor;
-import org.mydotey.artemis.util.StringUtil;
 import org.mydotey.codec.json.JacksonJsonCodec;
 import org.mydotey.java.StringExtension;
+import org.mydotey.java.io.file.FileExtension;
 import org.mydotey.rpc.client.http.apache.HttpRequestFactory;
 import org.mydotey.rpc.client.http.apache.sync.DynamicPoolingHttpClientProvider;
 import org.mydotey.rpc.client.http.apache.sync.HttpRequestExecutors;
@@ -41,7 +41,7 @@ public class RegistryServiceClient implements RegistryService {
     public RegisterResponse register(final RegisterRequest request) {
         return ArtemisTraceExecutor.INSTANCE.execute("artemis.client.registry-service.register",
             () -> {
-                final String requestUrl = StringUtil.concatPathParts(_url,
+                final String requestUrl = FileExtension.concatPathParts(_url,
                     RestPaths.REGISTRY_REGISTER_FULL_PATH);
                 HttpEntityEnclosingRequestBase httpRequest = HttpRequestFactory.createRequest(
                     requestUrl, HttpPost.METHOD_NAME, request, JacksonJsonCodec.DEFAULT);
@@ -55,7 +55,7 @@ public class RegistryServiceClient implements RegistryService {
     public HeartbeatResponse heartbeat(final HeartbeatRequest request) {
         return ArtemisTraceExecutor.INSTANCE.execute("artemis.client.registry-service.heartbeat",
             () -> {
-                final String requestUrl = StringUtil.concatPathParts(_url,
+                final String requestUrl = FileExtension.concatPathParts(_url,
                     RestPaths.REGISTRY_HEARTBEAT_FULL_PATH);
                 HttpEntityEnclosingRequestBase httpRequest = HttpRequestFactory.createRequest(
                     requestUrl, HttpPost.METHOD_NAME, request, JacksonJsonCodec.DEFAULT);
@@ -70,7 +70,7 @@ public class RegistryServiceClient implements RegistryService {
     public UnregisterResponse unregister(final UnregisterRequest request) {
         return ArtemisTraceExecutor.INSTANCE.execute("artemis.client.registry-service.unregister",
             () -> {
-                final String requestUrl = StringUtil.concatPathParts(_url,
+                final String requestUrl = FileExtension.concatPathParts(_url,
                     RestPaths.REGISTRY_UNREGISTER_FULL_PATH);
                 HttpEntityEnclosingRequestBase httpRequest = HttpRequestFactory.createRequest(
                     requestUrl, HttpPost.METHOD_NAME, request, JacksonJsonCodec.DEFAULT);

@@ -1,70 +1,46 @@
 package org.mydotey.artemis.config;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import org.mydotey.java.StringExtension;
 import org.mydotey.java.net.NetworkInterfaceManager;
 import org.mydotey.scf.ConfigurationManager;
-import org.mydotey.scf.ConfigurationManagerConfig;
 import org.mydotey.scf.ConfigurationSource;
 import org.mydotey.scf.Property;
 import org.mydotey.scf.facade.ConfigurationManagers;
 import org.mydotey.scf.facade.StringProperties;
-import org.mydotey.scf.facade.StringPropertySources;
-import org.mydotey.scf.source.stringproperty.StringPropertyConfigurationSource;
-import org.mydotey.scf.source.stringproperty.cascaded.CascadedConfigurationSourceConfig;
-import org.mydotey.scf.source.stringproperty.propertiesfile.PropertiesFileConfigurationSource;
-import org.mydotey.scf.source.stringproperty.propertiesfile.PropertiesFileConfigurationSourceConfig;
-
+import org.mydotey.scf.facade.SimpleConfigurationSources;
+import org.mydotey.scf.source.cascaded.CascadedConfigurationSource;
+import org.mydotey.scf.source.pipeline.PipelineConfigurationSource;
 import com.google.common.collect.ListMultimap;
 
 /**
  * Created by Qiang Zhao on 10/07/2016.
  */
-@SuppressWarnings({ "unchecked", "rawtypes" })
 public final class ArtemisConfig {
 
     private static final String PROPERTIES_FILE_NAME = "artemis";
 
-    private static final String[] CASCADED_FACTORS = new String[] { NetworkInterfaceManager.INSTANCE.localhostIP() };
+    private static final String[] CASCADED_FACTORS = new String[] { NetworkInterfaceManager.INSTANCE.hostIP() };
 
     private static StringProperties _properties;
 
     static {
-        String sourceFileName = PROPERTIES_FILE_NAME;
-        PropertiesFileConfigurationSourceConfig sourceConfig = StringPropertySources
-            .newPropertiesFileSourceConfigBuilder()
-            .setName(sourceFileName).setFileName(sourceFileName).build();
-        PropertiesFileConfigurationSource source = StringPropertySources.newPropertiesFileSource(sourceConfig);
         List<ConfigurationSource> sources = new ArrayList<>();
-        sources.add(source);
+        sources.add(SimpleConfigurationSources.newEnvironmentVariableSource());
+        sources.add(SimpleConfigurationSources.newSystemPropertiesSource());
         if (!StringExtension.isBlank(DeploymentConfig.deploymentEnv())) {
-            sourceFileName = PROPERTIES_FILE_NAME + "-" + DeploymentConfig.deploymentEnv();
-            sourceConfig = StringPropertySources.newPropertiesFileSourceConfigBuilder()
-                .setName(sourceFileName).setFileName(sourceFileName).build();
-            source = StringPropertySources.newPropertiesFileSource(sourceConfig);
-            sources.add(source);
+            sources.add(SimpleConfigurationSources
+                .newPropertiesFileSource(PROPERTIES_FILE_NAME + "-" + DeploymentConfig.deploymentEnv()));
         }
+        sources.add(SimpleConfigurationSources.newPropertiesFileSource(PROPERTIES_FILE_NAME));
 
-        for (int i = 0; i < sources.size(); i++) {
-            StringPropertyConfigurationSource source2 = (StringPropertyConfigurationSource) sources.get(0);
-            CascadedConfigurationSourceConfig<PropertiesFileConfigurationSourceConfig> cascadedConfigurationSourceConfig = StringPropertySources
-                .<PropertiesFileConfigurationSourceConfig>newCascadedSourceConfigBuilder()
-                .setKeySeparator(".").addCascadedFactors(Arrays.asList(CASCADED_FACTORS))
-                .setName("cascaded-" + source2.getConfig().getName()).setSource(source2).build();
-            sources.set(i, StringPropertySources.newCascadedSource(cascadedConfigurationSourceConfig));
-        }
+        PipelineConfigurationSource pipelineConfigurationSource = SimpleConfigurationSources.newPipelineSource(sources);
+        CascadedConfigurationSource cascadedConfigurationSource = SimpleConfigurationSources
+            .newCascadedSource(pipelineConfigurationSource, CASCADED_FACTORS);
 
-        sources.add(StringPropertySources.newEnvironmentVariableSource("environment-variables"));
-
-        ConfigurationManagerConfig.Builder managerConfigBuilder = ConfigurationManagers.newConfigBuilder()
-            .setName("artemis");
-        for (int i = 0; i < sources.size(); i++) {
-            managerConfigBuilder.addSource(i, sources.get(i));
-        }
-        ConfigurationManager manager = ConfigurationManagers.newManager(managerConfigBuilder.build());
+        ConfigurationManager manager = ConfigurationManagers.newManager("artemis", cascadedConfigurationSource);
         _properties = new StringProperties(manager);
     }
 

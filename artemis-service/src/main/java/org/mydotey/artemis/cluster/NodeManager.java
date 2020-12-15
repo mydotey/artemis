@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import org.mydotey.artemis.config.ArtemisConfig;
-import org.mydotey.artemis.config.RangeValueFilter;
+import org.mydotey.scf.filter.RangeValueFilter;
 import org.mydotey.artemis.trace.ArtemisTraceExecutor;
 import org.mydotey.artemis.util.ServiceNodeUtil;
 import org.mydotey.java.BooleanExtension;
@@ -38,16 +38,16 @@ public final class NodeManager {
 
     private Property<String, Boolean> _statusForceDownProperty = ArtemisConfig.properties()
         .getBooleanProperty(
-            "artemis.service.cluster.node.status.force-down." + NetworkInterfaceManager.INSTANCE.localhostIP(), false);
+            "artemis.service.cluster.node.status.force-down." + NetworkInterfaceManager.INSTANCE.hostIP(), false);
 
     private Property<String, Boolean> _serviceRegistryForceDownProperty = ArtemisConfig.properties()
         .getBooleanProperty(
-            "artemis.service.cluster.node.status.registry.force-down." + NetworkInterfaceManager.INSTANCE.localhostIP(),
+            "artemis.service.cluster.node.status.registry.force-down." + NetworkInterfaceManager.INSTANCE.hostIP(),
             false);
 
     private Property<String, Boolean> _serviceDiscoveryForceDownProperty = ArtemisConfig.properties()
         .getBooleanProperty("artemis.service.cluster.node.status.discovery.force-down."
-            + NetworkInterfaceManager.INSTANCE.localhostIP(), false);
+            + NetworkInterfaceManager.INSTANCE.hostIP(), false);
 
     private Property<String, Integer> _initSyncIntervalProperty = ArtemisConfig.properties()
         .getIntProperty("artemis.service.cluster.node.init.sync-interval", 1000,

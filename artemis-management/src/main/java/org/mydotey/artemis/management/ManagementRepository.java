@@ -17,8 +17,8 @@ import org.mydotey.artemis.ServerKey;
 import org.mydotey.artemis.Service;
 import org.mydotey.artemis.cluster.NodeManager;
 import org.mydotey.artemis.config.ArtemisConfig;
-import org.mydotey.artemis.config.RangePropertyConfig;
-import org.mydotey.artemis.config.RangeValueFilter;
+import org.mydotey.scf.filter.RangeValueConfig;
+import org.mydotey.scf.filter.RangeValueFilter;
 import org.mydotey.artemis.discovery.DiscoveryConfig;
 import org.mydotey.artemis.discovery.DiscoveryFilter;
 import org.mydotey.artemis.lease.Lease;
@@ -110,7 +110,7 @@ public class ManagementRepository {
     private ManagementRepository() {
         DynamicScheduledThreadConfig dynamicScheduledThreadConfig = new DynamicScheduledThreadConfig(
             ArtemisConfig.properties(),
-            new RangePropertyConfig<Integer>(0, 0, 10 * 1000), new RangePropertyConfig<Integer>(1000, 200, 60 * 1000));
+            new RangeValueConfig<Integer>(0, 0, 10 * 1000), new RangeValueConfig<Integer>(1000, 200, 60 * 1000));
         final String cacheRefreshKey = "artemis.management.data.cache-refresher";
         _cacheRefresher = new DynamicScheduledThread(cacheRefreshKey, () -> {
             _lastRefreshTime = System.currentTimeMillis();

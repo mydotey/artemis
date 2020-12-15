@@ -4,8 +4,8 @@ import java.util.Map;
 import java.util.function.Function;
 
 import org.mydotey.artemis.config.ArtemisConfig;
-import org.mydotey.artemis.config.RangePropertyConfig;
-import org.mydotey.artemis.config.RangeValueFilter;
+import org.mydotey.scf.filter.RangeValueConfig;
+import org.mydotey.scf.filter.RangeValueFilter;
 import org.mydotey.artemis.metric.ArtemisMetricManagers;
 import org.mydotey.artemis.metric.EventMetric;
 import org.mydotey.artemis.metric.MetricConfig;
@@ -120,8 +120,8 @@ public class LeaseUpdateSafeChecker {
         resetLeaseUpdateCounterBuffer();
         DynamicScheduledThreadConfig dynamicScheduledThreadConfig = new DynamicScheduledThreadConfig(
             ArtemisConfig.properties(),
-            new RangePropertyConfig<Integer>(1000, 100, 60 * 1000),
-            new RangePropertyConfig<Integer>(1000, 100, 60 * 1000));
+            new RangeValueConfig<Integer>(1000, 100, 60 * 1000),
+            new RangeValueConfig<Integer>(1000, 100, 60 * 1000));
         _safeCheckThread = new DynamicScheduledThread(_safeCheckerId, new Runnable() {
             @Override
             public void run() {

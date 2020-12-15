@@ -8,8 +8,8 @@ import com.google.common.collect.Sets;
 
 import org.mydotey.artemis.*;
 import org.mydotey.artemis.config.ArtemisConfig;
-import org.mydotey.artemis.config.RangePropertyConfig;
-import org.mydotey.artemis.config.RangeValueFilter;
+import org.mydotey.scf.filter.RangeValueConfig;
+import org.mydotey.scf.filter.RangeValueFilter;
 import org.mydotey.artemis.management.common.OperationContext;
 import org.mydotey.artemis.management.group.*;
 import org.mydotey.artemis.management.group.dao.*;
@@ -99,8 +99,8 @@ public class GroupRepository {
     private GroupRepository() {
         DynamicScheduledThreadConfig dynamicScheduledThreadConfig = new DynamicScheduledThreadConfig(
             ArtemisConfig.properties(),
-            new RangePropertyConfig<Integer>(0, 0, 10 * 1000),
-            new RangePropertyConfig<Integer>(5 * 1000, 10, 60 * 1000));
+            new RangeValueConfig<Integer>(0, 0, 10 * 1000),
+            new RangeValueConfig<Integer>(5 * 1000, 10, 60 * 1000));
         final String cacheRefreshKey = "artemis.management.group.data.cache-refresher";
         cacheRefresher = new DynamicScheduledThread(cacheRefreshKey, new Runnable() {
             @Override

@@ -2,7 +2,7 @@ package org.mydotey.artemis.util;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.mydotey.artemis.config.PropertyKeyGenerator;
+import org.mydotey.scf.util.PropertyKeyGenerator;
 import org.mydotey.java.ObjectExtension;
 import org.mydotey.java.StringExtension;
 import org.mydotey.java.ThreadExtension;
@@ -33,15 +33,13 @@ public class DynamicScheduledThread extends Thread {
 
         setName(_threadId);
 
-        String propertyKey = PropertyKeyGenerator.generateKey(_threadId,
+        String propertyKey = PropertyKeyGenerator.generatePropertyKey(_threadId,
             DynamicScheduledThreadConfig.INIT_DELAY_PROPERTY_KEY);
-        _initDelayProperty = config.properties().getIntProperty(propertyKey, config.initDelayRange().defaultValue(),
-            config.initDelayRange().toValueFilter());
+        _initDelayProperty = config.properties().getIntProperty(propertyKey, config.initDelayRange());
 
-        propertyKey = PropertyKeyGenerator.generateKey(_threadId,
+        propertyKey = PropertyKeyGenerator.generatePropertyKey(_threadId,
             DynamicScheduledThreadConfig.RUN_INTERVAL_PROPERTY_KEY);
-        _runIntervalProperty = config.properties().getIntProperty(propertyKey, config.runIntervalRange().defaultValue(),
-            config.initDelayRange().toValueFilter());
+        _runIntervalProperty = config.properties().getIntProperty(propertyKey, config.runIntervalRange());
     }
 
     @Override

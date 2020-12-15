@@ -9,8 +9,8 @@ import org.mydotey.artemis.Instance;
 import org.mydotey.artemis.ResponseStatus;
 import org.mydotey.artemis.client.common.ArtemisClientConfig;
 import org.mydotey.artemis.client.websocket.WebSocketSessionContext;
-import org.mydotey.artemis.config.RangePropertyConfig;
-import org.mydotey.artemis.config.RangeValueFilter;
+import org.mydotey.scf.filter.RangeValueConfig;
+import org.mydotey.scf.filter.RangeValueFilter;
 import org.mydotey.artemis.metric.AuditMetric;
 import org.mydotey.artemis.metric.EventMetric;
 import org.mydotey.artemis.metric.MetricConfig;
@@ -87,8 +87,8 @@ public class InstanceRegistry {
                 config.key("heartbeat.accept-latency"))));
         final DynamicScheduledThreadConfig dynamicScheduledThreadConfig = new DynamicScheduledThreadConfig(
             config.properties(),
-            new RangePropertyConfig<Integer>(5 * 1000, 1 * 1000, 60 * 1000),
-            new RangePropertyConfig<Integer>(1000, 500, 90 * 1000));
+            new RangeValueConfig<Integer>(5 * 1000, 1 * 1000, 60 * 1000),
+            new RangeValueConfig<Integer>(1000, 500, 90 * 1000));
         _heartbeatChecker = new DynamicScheduledThread(config.key("instance-registry.heartbeat-checker"),
             new Runnable() {
                 @Override

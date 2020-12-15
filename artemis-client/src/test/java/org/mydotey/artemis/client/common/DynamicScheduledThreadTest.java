@@ -3,7 +3,7 @@ package org.mydotey.artemis.client.common;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mydotey.artemis.client.test.utils.ArtemisClientConstants;
-import org.mydotey.artemis.config.RangePropertyConfig;
+import org.mydotey.scf.filter.RangeValueConfig;
 import org.mydotey.artemis.util.DynamicScheduledThread;
 import org.mydotey.artemis.util.DynamicScheduledThreadConfig;
 
@@ -17,7 +17,7 @@ public class DynamicScheduledThreadTest {
     public void testShutdown() throws InterruptedException {
         DynamicScheduledThreadConfig dynamicScheduledThreadConfig = new DynamicScheduledThreadConfig(
             ArtemisClientConstants.Properties,
-            new RangePropertyConfig<Integer>(20, 0, 200), new RangePropertyConfig<Integer>(500, 500, 5 * 1000));
+            new RangeValueConfig<Integer>(20, 0, 200), new RangeValueConfig<Integer>(500, 500, 5 * 1000));
         DynamicScheduledThread t = new DynamicScheduledThread("client", Runnables.doNothing(),
             dynamicScheduledThreadConfig);
         t.setDaemon(true);

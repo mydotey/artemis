@@ -15,7 +15,7 @@ import org.mydotey.artemis.InstanceChange;
 import org.mydotey.artemis.InstanceKey;
 import org.mydotey.artemis.Service;
 import org.mydotey.artemis.config.ArtemisConfig;
-import org.mydotey.artemis.config.RangeValueFilter;
+import org.mydotey.scf.filter.RangeValueFilter;
 import org.mydotey.artemis.lease.Lease;
 import org.mydotey.artemis.lease.LeaseCleanEventListener;
 import org.mydotey.artemis.lease.LeaseManager;

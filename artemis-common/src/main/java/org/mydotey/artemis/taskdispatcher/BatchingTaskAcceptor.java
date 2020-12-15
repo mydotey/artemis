@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.mydotey.artemis.config.ArtemisConfig;
-import org.mydotey.artemis.config.RangeValueFilter;
+import org.mydotey.scf.filter.RangeValueFilter;
 import org.mydotey.artemis.metric.ArtemisMetricManagers;
 import org.mydotey.artemis.metric.AuditMetric;
 import org.mydotey.artemis.metric.MetricConfig;
