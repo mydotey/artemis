@@ -16,6 +16,15 @@ import org.springframework.context.annotation.ComponentScan;
 @SpringBootApplication(exclude = { DataSourceAutoConfiguration.class })
 public class App extends SpringBootServletInitializer {
 
+    public App() {
+        try {
+            ArtemisInitializer.init();
+        } catch (Throwable e) {
+            e.printStackTrace();
+            System.exit(0);
+        }
+    }
+
     @Override
     protected SpringApplicationBuilder configure(SpringApplicationBuilder application) {
         return application.sources(App.class);

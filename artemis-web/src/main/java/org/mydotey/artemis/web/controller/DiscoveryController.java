@@ -59,7 +59,6 @@ public class DiscoveryController {
         publishers.add(_publisher);
         publishers.add(_allServicePublisher);
         InstanceChangeManager.getInstance().init(publishers);
-        ;
     }
 
     @RequestMapping(path = RestPaths.DISCOVERY_LOOKUP_RELATIVE_PATH, method = RequestMethod.POST, consumes = "application/json", produces = "application/json")
