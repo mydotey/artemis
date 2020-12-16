@@ -1,9 +1,9 @@
 package org.mydotey.artemis.client;
 
-import org.mydotey.artemis.metric.AuditMetricManager;
-import org.mydotey.artemis.metric.EventMetricManager;
-import org.mydotey.artemis.metric.NullAuditMetricManager;
-import org.mydotey.artemis.metric.NullEventMetricManager;
+import org.mydotey.caravan.util.metric.AuditMetricManager;
+import org.mydotey.caravan.util.metric.EventMetricManager;
+import org.mydotey.caravan.util.metric.NullAuditMetricManager;
+import org.mydotey.caravan.util.metric.NullEventMetricManager;
 import org.mydotey.scf.facade.StringProperties;
 
 import com.google.common.base.Preconditions;

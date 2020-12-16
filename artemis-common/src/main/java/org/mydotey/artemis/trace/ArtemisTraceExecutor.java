@@ -1,5 +1,7 @@
 package org.mydotey.artemis.trace;
 
+import org.mydotey.caravan.util.trace.TraceExecutor;
+
 import com.google.common.collect.ImmutableMap;
 
 /**

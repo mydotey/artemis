@@ -1,6 +1,9 @@
 package org.mydotey.artemis.metric;
 
 import org.mydotey.artemis.config.ArtemisConfig;
+import org.mydotey.caravan.util.metric.AuditMetricManager;
+import org.mydotey.caravan.util.metric.EventMetricManager;
+import org.mydotey.caravan.util.metric.StatusMetricManager;
 import org.mydotey.java.ObjectExtension;
 import org.mydotey.java.StringExtension;
 import org.mydotey.scf.Property;

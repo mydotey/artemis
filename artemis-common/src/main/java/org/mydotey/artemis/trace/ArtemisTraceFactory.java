@@ -3,6 +3,9 @@ package org.mydotey.artemis.trace;
 import java.util.Map;
 
 import org.mydotey.artemis.config.ArtemisConfig;
+import org.mydotey.caravan.util.trace.NullTraceFactory;
+import org.mydotey.caravan.util.trace.Trace;
+import org.mydotey.caravan.util.trace.TraceFactory;
 import org.mydotey.java.StringExtension;
 import org.mydotey.scf.Property;
 import org.slf4j.Logger;

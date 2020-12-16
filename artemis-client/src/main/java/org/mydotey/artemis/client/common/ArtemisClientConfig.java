@@ -3,10 +3,10 @@ package org.mydotey.artemis.client.common;
 import org.mydotey.artemis.client.ArtemisClientManagerConfig;
 import org.mydotey.artemis.client.DiscoveryClientConfig;
 import org.mydotey.artemis.client.RegistryClientConfig;
-import org.mydotey.artemis.metric.AuditMetricManager;
-import org.mydotey.artemis.metric.EventMetricManager;
-import org.mydotey.artemis.ratelimiter.RateLimiterManager;
-import org.mydotey.artemis.ratelimiter.RateLimiterManagerConfig;
+import org.mydotey.caravan.util.metric.AuditMetricManager;
+import org.mydotey.caravan.util.metric.EventMetricManager;
+import org.mydotey.caravan.util.ratelimiter.RateLimiterManager;
+import org.mydotey.caravan.util.ratelimiter.RateLimiterManagerConfig;
 import org.mydotey.java.StringExtension;
 import org.mydotey.scf.facade.StringProperties;
 

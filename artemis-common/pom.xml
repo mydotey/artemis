@@ -36,6 +36,10 @@
             <artifactId>scf-simple</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.mydotey.caravan</groupId>
+            <artifactId>caravan-util</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
         </dependency>

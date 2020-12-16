@@ -10,7 +10,7 @@ import org.mydotey.artemis.management.ManagementDiscoveryFilter;
 import org.mydotey.artemis.management.ManagementInitializer;
 import org.mydotey.artemis.management.ManagementRepository;
 import org.mydotey.artemis.management.dao.DataConfig;
-import org.mydotey.artemis.web.filter.Filters;
+import org.mydotey.caravan.web.filter.Filters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.WebApplicationInitializer;

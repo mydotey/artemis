@@ -33,6 +33,10 @@
             <artifactId>guava</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.mydotey.caravan</groupId>
+            <artifactId>caravan-web</artifactId>
+        </dependency>
+        <dependency>
             <groupId>javax.inject</groupId>
             <artifactId>javax.inject</artifactId>
         </dependency>
@@ -79,10 +83,6 @@
         <dependency>
             <groupId>io.springfox</groupId>
             <artifactId>springfox-swagger-ui</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.github.ziplet</groupId>
-            <artifactId>ziplet</artifactId>
         </dependency>
         <dependency>
             <groupId>javax.servlet</groupId>

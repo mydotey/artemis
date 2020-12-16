@@ -4,8 +4,8 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.mydotey.artemis.client.test.utils.ArtemisClientConstants;
 import org.mydotey.scf.filter.RangeValueConfig;
-import org.mydotey.artemis.util.DynamicScheduledThread;
-import org.mydotey.artemis.util.DynamicScheduledThreadConfig;
+import org.mydotey.caravan.util.concurrent.DynamicScheduledThread;
+import org.mydotey.caravan.util.concurrent.DynamicScheduledThreadConfig;
 
 import com.google.common.util.concurrent.Runnables;
 

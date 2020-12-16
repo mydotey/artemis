@@ -5,11 +5,11 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.mydotey.artemis.config.ArtemisConfig;
-import org.mydotey.scf.filter.RangeValueFilter;
 import org.mydotey.artemis.metric.ArtemisMetricManagers;
-import org.mydotey.artemis.metric.EventMetric;
-import org.mydotey.artemis.metric.MetricConfig;
-import org.mydotey.artemis.metric.MetricNames;
+import org.mydotey.scf.filter.RangeValueFilter;
+import org.mydotey.caravan.util.metric.EventMetric;
+import org.mydotey.caravan.util.metric.MetricConfig;
+import org.mydotey.caravan.util.metric.MetricNames;
 import org.mydotey.artemis.trace.ArtemisTraceExecutor;
 import org.mydotey.artemis.util.Loops;
 import org.mydotey.java.ObjectExtension;

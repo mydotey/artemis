@@ -19,8 +19,8 @@ import org.mydotey.artemis.config.ArtemisConfig;
 import org.mydotey.scf.filter.RangeValueConfig;
 import org.mydotey.scf.filter.RangeValueFilter;
 import org.mydotey.artemis.metric.MetricLoggerHelper;
-import org.mydotey.artemis.util.DynamicScheduledThread;
-import org.mydotey.artemis.util.DynamicScheduledThreadConfig;
+import org.mydotey.caravan.util.concurrent.DynamicScheduledThread;
+import org.mydotey.caravan.util.concurrent.DynamicScheduledThreadConfig;
 
 import com.google.common.collect.Maps;
 
