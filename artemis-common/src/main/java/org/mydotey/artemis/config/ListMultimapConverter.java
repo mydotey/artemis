@@ -28,7 +28,7 @@ public class ListMultimapConverter extends AbstractTypeConverter<String, ListMul
         ListMultimap<String, String> listMultimap = ArrayListMultimap.create();
         String[] pairValues = source.trim().split(";");
         for (String pairValue : pairValues) {
-            KeyValuePair<String, String> pair = toKeyValuePair(pairValue);
+            KeyValuePair<String, String> pair = KeyValuePair.parse(pairValue);
             if (pair == null)
                 continue;
 
@@ -42,27 +42,6 @@ public class ListMultimapConverter extends AbstractTypeConverter<String, ListMul
         }
 
         return listMultimap.size() == 0 ? null : listMultimap;
-    }
-
-    public static KeyValuePair<String, String> toKeyValuePair(String s) {
-        return toKeyValuePair(s, ":");
-    }
-
-    public static KeyValuePair<String, String> toKeyValuePair(String s, String separator) {
-        if (StringExtension.isBlank(s) || StringExtension.isBlank(separator))
-            return null;
-
-        s = s.trim();
-        separator = separator.trim();
-
-        String[] parts = s.split(separator, 2);
-        if (parts.length != 2)
-            return null;
-
-        if (StringExtension.isBlank(parts[0]) || StringExtension.isBlank(parts[1]))
-            return null;
-
-        return new KeyValuePair<String, String>(parts[0].trim(), parts[1].trim());
     }
 
 }
