@@ -5,9 +5,6 @@ import org.mydotey.artemis.web.websocket.AllServicesChangeWsHandler;
 import org.mydotey.artemis.web.websocket.ServiceChangeWsHandler;
 import com.google.common.collect.Lists;
 
-import org.mydotey.artemis.ErrorCodes;
-import org.mydotey.artemis.ResponseStatus;
-import org.mydotey.artemis.Service;
 import org.mydotey.artemis.config.RestPaths;
 import org.mydotey.artemis.discovery.DiscoveryConfig;
 import org.mydotey.artemis.discovery.DiscoveryServiceImpl;
@@ -20,11 +17,6 @@ import org.mydotey.artemis.discovery.GetServicesResponse;
 import org.mydotey.artemis.discovery.LookupRequest;
 import org.mydotey.artemis.discovery.LookupResponse;
 import org.mydotey.artemis.metric.MetricLoggerHelper;
-import org.mydotey.artemis.util.ResponseStatusUtil;
-import org.mydotey.artemis.util.StringUtil;
-import org.mydotey.java.collection.CollectionExtension;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -33,7 +25,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.inject.Inject;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -42,8 +33,6 @@ import java.util.List;
 @RestController
 @RequestMapping(path = RestPaths.DISCOVERY_PATH)
 public class DiscoveryController {
-
-    private static final Logger _logger = LoggerFactory.getLogger(DiscoveryController.class);
 
     private DiscoveryServiceImpl _discoveryService = DiscoveryServiceImpl.getInstance();
 
@@ -63,32 +52,7 @@ public class DiscoveryController {
 
     @RequestMapping(path = RestPaths.DISCOVERY_LOOKUP_RELATIVE_PATH, method = RequestMethod.POST, consumes = "application/json", produces = "application/json")
     public LookupResponse lookup(@RequestBody LookupRequest request) {
-        LookupResponse response;
-        try {
-            List<Service> services = new ArrayList<>();
-            for (DiscoveryConfig discoveryConfig : request.getDiscoveryConfigs()) {
-                String serviceId = discoveryConfig.getServiceId();
-                LookupRequest singleServiceRequest = new LookupRequest(Lists.newArrayList(discoveryConfig),
-                    request.getRegionId(), request.getZoneId());
-                LookupResponse singleServiceResponse = this._discoveryService.lookup(singleServiceRequest);
-                ResponseStatus responseStatus = singleServiceResponse.getResponseStatus();
-                if (ResponseStatusUtil.isSuccess(responseStatus)
-                    && !CollectionExtension.isEmpty(singleServiceResponse.getServices())) {
-                    Service service = singleServiceResponse.getServices().get(0);
-                    services.add(service);
-                    continue;
-                }
-
-                services.add(new Service(serviceId));
-            }
-
-            response = new LookupResponse(services, ResponseStatusUtil.SUCCESS_STATUS);
-        } catch (Throwable ex) {
-            _logger.error("Lookup failed. Request: " + StringUtil.toJson(request), ex);
-            response = new LookupResponse(null,
-                ResponseStatusUtil.newFailStatus(ex.getMessage(), ErrorCodes.INTERNAL_SERVICE_ERROR));
-        }
-
+        LookupResponse response = this._discoveryService.lookup(request);
         MetricLoggerHelper.logResponseEvent("discovery", "lookup", response);
         return response;
     }
