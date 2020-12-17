@@ -40,7 +40,7 @@ public class RegistryReplicationInitializer implements NodeInitializer {
     }
 
     @Override
-    public boolean initialize() {
+    public boolean initialized() {
         List<ServiceNode> peerNodes = ClusterManager.INSTANCE.localZoneOtherNodes();
         boolean success = initRegistryDataFromPeerNodes(peerNodes);
         if (success)

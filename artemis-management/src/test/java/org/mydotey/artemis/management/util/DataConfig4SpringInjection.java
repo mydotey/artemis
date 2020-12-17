@@ -1,9 +1,7 @@
 package org.mydotey.artemis.management.util;
 
-import java.util.ArrayList;
-
 import org.mydotey.artemis.cluster.ClusterManager;
-import org.mydotey.artemis.cluster.NodeInitializer;
+import org.mydotey.artemis.management.ManagementInitializer;
 import org.mydotey.artemis.management.dao.DataConfig;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,8 +15,8 @@ import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 public class DataConfig4SpringInjection {
     static {
         try {
-            DataConfig.init();
-            ClusterManager.INSTANCE.init(new ArrayList<NodeInitializer>());
+            ManagementInitializer.INSTANCE.init();
+            ClusterManager.INSTANCE.init();
         } catch (final Exception e) {
             e.printStackTrace();
         }

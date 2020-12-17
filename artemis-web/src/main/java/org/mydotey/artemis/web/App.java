@@ -1,5 +1,7 @@
 package org.mydotey.artemis.web;
 
+import org.mydotey.artemis.cluster.ClusterManager;
+import org.mydotey.artemis.management.ManagementInitializer;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
@@ -18,7 +20,8 @@ public class App extends SpringBootServletInitializer {
 
     public App() {
         try {
-            ArtemisInitializer.init();
+            ManagementInitializer.INSTANCE.init();
+            ClusterManager.INSTANCE.init();
         } catch (Throwable e) {
             e.printStackTrace();
             System.exit(0);

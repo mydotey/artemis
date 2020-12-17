@@ -13,9 +13,9 @@ import org.springframework.web.socket.WebSocketSession;
 
 import org.mydotey.artemis.InstanceChange;
 import org.mydotey.artemis.discovery.DiscoveryConfig;
+import org.mydotey.artemis.discovery.notify.InstanceChangeSubscriber;
 import org.mydotey.artemis.metric.MetricLoggerHelper;
 import org.mydotey.artemis.util.StringUtil;
-import org.mydotey.artemis.web.util.Publisher;
 import org.mydotey.codec.json.JacksonJsonCodec;
 import org.mydotey.java.StringExtension;
 
@@ -26,7 +26,8 @@ import com.google.common.collect.Sets;
 /**
  * Created by fang_j on 10/07/2016.
  */
-public class ServiceChangeWsHandler extends MetricWsHandler implements Publisher {
+public class ServiceChangeWsHandler extends MetricWsHandler implements InstanceChangeSubscriber {
+
     private static final Logger logger = LoggerFactory.getLogger(ServiceChangeWsHandler.class);
     private final Map<String, Set<String>> serviceChangeSessions = Maps.newConcurrentMap();
 
@@ -49,20 +50,20 @@ public class ServiceChangeWsHandler extends MetricWsHandler implements Publisher
     }
 
     @Override
-    public boolean publish(final InstanceChange instanceChange) {
+    public void accept(final InstanceChange instanceChange) {
         try {
             if ((instanceChange == null) || (instanceChange.getInstance() == null)) {
-                return true;
+                return;
             }
 
             final String serviceId = instanceChange.getInstance().getServiceId();
             if (StringExtension.isBlank(serviceId)) {
-                return true;
+                return;
             }
 
             final List<WebSocketSession> sessions = getSessions(serviceId);
             if (CollectionUtils.isEmpty(sessions)) {
-                return true;
+                return;
             }
             final String instanceId = instanceChange.getInstance().getInstanceId();
             final String changeType = instanceChange.getChangeType();
@@ -88,10 +89,10 @@ public class ServiceChangeWsHandler extends MetricWsHandler implements Publisher
             }
             logger.info(
                 String.format("send instance change message to %d sessions: %s", sessions.size(), instanceChange));
-            return true;
+            return;
         } catch (final Exception e) {
             logger.error("send instance change failed", e);
-            return false;
+            return;
         }
     }
 

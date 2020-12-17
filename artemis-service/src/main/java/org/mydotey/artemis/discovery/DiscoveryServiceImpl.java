@@ -53,22 +53,8 @@ public class DiscoveryServiceImpl implements DiscoveryService {
 
     private RegistryRepository _registryRepository = RegistryRepository.getInstance();
 
-    private List<DiscoveryFilter> _filters = new ArrayList<>();
-
     private DiscoveryServiceImpl() {
 
-    }
-
-    public synchronized void addFilters(DiscoveryFilter... filters) {
-        if (CollectionExtension.isEmpty(filters))
-            return;
-
-        for (DiscoveryFilter filter : filters) {
-            if (filter == null)
-                continue;
-
-            _filters.add(filter);
-        }
     }
 
     @Override
@@ -247,7 +233,7 @@ public class DiscoveryServiceImpl implements DiscoveryService {
         if (service == null)
             return;
 
-        for (DiscoveryFilter filter : _filters) {
+        for (DiscoveryFilter filter : DiscoveryFilters.INSTANCE.getFilters()) {
             try {
                 filter.filter(service, discoveryConfig);
             } catch (Throwable ex) {

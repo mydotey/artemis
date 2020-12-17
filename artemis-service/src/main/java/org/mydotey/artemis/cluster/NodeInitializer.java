@@ -11,6 +11,6 @@ public interface NodeInitializer {
 
     TargetType target();
 
-    boolean initialize();
+    boolean initialized();
 
 }

@@ -1,9 +1,9 @@
 package org.mydotey.artemis.web.websocket;
 
 import org.mydotey.artemis.InstanceChange;
+import org.mydotey.artemis.discovery.notify.InstanceChangeSubscriber;
 import org.mydotey.artemis.metric.MetricLoggerHelper;
 import org.mydotey.artemis.util.StringUtil;
-import org.mydotey.artemis.web.util.Publisher;
 import org.mydotey.java.StringExtension;
 import org.mydotey.java.collection.CollectionExtension;
 
@@ -18,26 +18,27 @@ import java.util.List;
 /**
  * Created by fang_j on 10/07/2016.
  */
-public class AllServicesChangeWsHandler extends MetricWsHandler implements Publisher {
+public class AllServicesChangeWsHandler extends MetricWsHandler implements InstanceChangeSubscriber {
+
     private static final Logger logger = LoggerFactory.getLogger(AllServicesChangeWsHandler.class);
 
     @Override
-    public boolean publish(final InstanceChange instanceChange) {
+    public void accept(final InstanceChange instanceChange) {
         try {
             if ((instanceChange == null) || (instanceChange.getInstance() == null)) {
-                return true;
+                return;
             }
 
             final String serviceId = instanceChange.getInstance().getServiceId();
             if (StringExtension.isBlank(serviceId)) {
-                return true;
+                return;
             }
 
             final String instanceId = instanceChange.getInstance().getInstanceId();
             final String changeType = instanceChange.getChangeType();
 
             if (CollectionExtension.isEmpty(sessions)) {
-                return true;
+                return;
             }
             final TextMessage message = new TextMessage(StringUtil.toJson(instanceChange));
             List<WebSocketSession> allSessions = Lists.newArrayList(sessions.values());
@@ -61,10 +62,8 @@ public class AllServicesChangeWsHandler extends MetricWsHandler implements Publi
             }
             logger.info(
                 String.format("send instance change message to %d sessions: %s", sessions.size(), instanceChange));
-            return true;
         } catch (final Exception e) {
             logger.error("send instance change failed", e);
-            return false;
         }
     }
 

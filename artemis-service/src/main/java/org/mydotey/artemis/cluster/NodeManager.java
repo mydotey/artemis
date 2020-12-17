@@ -71,7 +71,14 @@ public final class NodeManager {
         return _nodeStatus;
     }
 
-    public void init(List<NodeInitializer> initializers) {
+    public void registerInitializer(NodeInitializer nodeInitializer) {
+        ObjectExtension.requireNonNull(nodeInitializer, "nodeInitializer");
+        synchronized (this) {
+            _initializers.add(nodeInitializer);
+        }
+    }
+
+    void init() {
         _nodeStatus = ServiceNodeUtil.newUnknownNodeStatus(ClusterManager.INSTANCE.localNode());
         _nodeStatus.setStatus(ServiceNodeStatus.Status.STARTING);
         updateNodeStatus();
@@ -87,8 +94,6 @@ public final class NodeManager {
         _allowDiscoveryFromOtherZoneProperty.addChangeListener(listener);
 
         _initializers.add(RegistryReplicationInitializer.INSTANCE);
-        if (initializers != null)
-            _initializers.addAll(initializers);
 
         initAsync();
     }
@@ -193,7 +198,7 @@ public final class NodeManager {
                 continue;
 
             try {
-                boolean itemSucess = initializer.initialize();
+                boolean itemSucess = initializer.initialized();
                 success = success && itemSucess;
             } catch (Throwable ex) {
                 success = false;

@@ -68,7 +68,7 @@ public final class ClusterManager {
     private ClusterManager() {
     }
 
-    public void init(List<NodeInitializer> nodeInitializers) {
+    public void init() {
         ObjectExtension.requireNonBlank(DeploymentConfig.regionId(), "DeploymentConfig.regionId()");
         ObjectExtension.requireNonBlank(DeploymentConfig.zoneId(), "DeploymentConfig.zoneId()");
         _localZone = new Zone(DeploymentConfig.regionId(), DeploymentConfig.zoneId());
@@ -78,6 +78,7 @@ public final class ClusterManager {
             return;
         }
 
+        _logger.info("===== Artemis is starting up! ========");
         _logger.info("ClusterManager is initing with regionId: " + DeploymentConfig.regionId());
 
         _localHostPortIdentity = DeploymentConfig.ip();
@@ -110,7 +111,7 @@ public final class ClusterManager {
             }
         }, 0, _nodesStatusUpdateInterval.getValue().intValue(), TimeUnit.MILLISECONDS);
 
-        NodeManager.INSTANCE.init(nodeInitializers);
+        NodeManager.INSTANCE.init();
 
         _logger.info("ClusterManager is inited with regionId: " + DeploymentConfig.regionId());
     }

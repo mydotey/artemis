@@ -1,10 +1,5 @@
 package org.mydotey.artemis.web.controller;
 
-import org.mydotey.artemis.web.util.*;
-import org.mydotey.artemis.web.websocket.AllServicesChangeWsHandler;
-import org.mydotey.artemis.web.websocket.ServiceChangeWsHandler;
-import com.google.common.collect.Lists;
-
 import org.mydotey.artemis.config.RestPaths;
 import org.mydotey.artemis.discovery.DiscoveryConfig;
 import org.mydotey.artemis.discovery.DiscoveryServiceImpl;
@@ -23,10 +18,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.inject.Inject;
-
-import java.util.List;
-
 /**
  * Created by Qiang Zhao on 10/07/2016.
  */
@@ -35,20 +26,6 @@ import java.util.List;
 public class DiscoveryController {
 
     private DiscoveryServiceImpl _discoveryService = DiscoveryServiceImpl.getInstance();
-
-    @Inject
-    private ServiceChangeWsHandler _publisher;
-
-    @Inject
-    private AllServicesChangeWsHandler _allServicePublisher;
-
-    @Inject
-    protected void init() {
-        List<Publisher> publishers = Lists.newArrayList();
-        publishers.add(_publisher);
-        publishers.add(_allServicePublisher);
-        InstanceChangeManager.getInstance().init(publishers);
-    }
 
     @RequestMapping(path = RestPaths.DISCOVERY_LOOKUP_RELATIVE_PATH, method = RequestMethod.POST, consumes = "application/json", produces = "application/json")
     public LookupResponse lookup(@RequestBody LookupRequest request) {

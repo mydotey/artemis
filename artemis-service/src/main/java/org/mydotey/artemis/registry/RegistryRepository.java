@@ -23,7 +23,6 @@ import org.mydotey.artemis.util.InstanceChangeComparator;
 import org.mydotey.artemis.util.InstanceChecker;
 import org.mydotey.artemis.util.SameRegionChecker;
 import org.mydotey.java.StringExtension;
-import org.mydotey.java.ThreadExtension;
 import org.mydotey.java.collection.CollectionExtension;
 import org.mydotey.scf.Property;
 import org.slf4j.Logger;
@@ -91,13 +90,13 @@ public class RegistryRepository {
         });
     }
 
-    public InstanceChange pollInstanceChange() {
+    public InstanceChange pollInstanceChange() throws InterruptedException {
         while (true) {
             InstanceChange instanceChange = _instanceChangeSet.pollFirst();
             if (instanceChange != null)
                 return instanceChange;
 
-            ThreadExtension.sleep(_instanceChangePollWaitProperty.getValue().intValue());
+            Thread.sleep(_instanceChangePollWaitProperty.getValue().intValue());
         }
     }
 
