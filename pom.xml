@@ -142,7 +142,8 @@
         <module>artemis-service</module>
         <module>artemis-client</module>
         <module>artemis-management</module>
-        <module>artemis-web</module>
+        <module>artemis-server</module>
+        <module>artemis-package</module>
     </modules>
 
     <dependencyManagement>
@@ -357,7 +358,12 @@
             </dependency>
             <dependency>
                 <groupId>org.mydotey.artemis</groupId>
-                <artifactId>artemis-web</artifactId>
+                <artifactId>artemis-server</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.mydotey.artemis</groupId>
+                <artifactId>artemis-package</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

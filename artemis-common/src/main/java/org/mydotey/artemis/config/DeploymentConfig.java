@@ -21,7 +21,7 @@ import org.slf4j.LoggerFactory;
  */
 public final class DeploymentConfig {
 
-    private static final String DEPLOYMENT_ENV_PROPERTY_NAME = "deployment-env";
+    private static final String DEPLOYMENT_ENV_PROPERTY_NAME = "deployment.env";
     private static final String PROPERTIES_FILE_NAME = "application";
 
     private static final String REGION_ID_PROPERTY_KEY = "region.id";
