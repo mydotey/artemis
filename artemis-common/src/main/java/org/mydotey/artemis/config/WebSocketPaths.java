@@ -5,10 +5,10 @@ package org.mydotey.artemis.config;
  */
 public interface WebSocketPaths extends ArtemisPaths {
 
-    String WS_CONTEXT_PATH = CONTEXT_PATH + "/websocket";
+    String WS_CONTEXT_PATH = CONTEXT_PATH + "websocket/";
 
-    String HEARTBEAT_DESTINATION = WS_CONTEXT_PATH + "/registry/heartbeat";
-    String SERVICE_CHANGE_DESTINATION = WS_CONTEXT_PATH + "/discovery/instance-change";
-    String ALL_SERVICES_CHANGE_DESTINATION = WS_CONTEXT_PATH + "/discovery/all-instance-change";
+    String HEARTBEAT_DESTINATION = WS_CONTEXT_PATH + "registry/heartbeat";
+    String SERVICE_CHANGE_DESTINATION = WS_CONTEXT_PATH + "discovery/instance-change";
+    String ALL_SERVICES_CHANGE_DESTINATION = WS_CONTEXT_PATH + "discovery/all-instance-change";
 
 }

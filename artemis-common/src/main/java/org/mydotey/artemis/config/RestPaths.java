@@ -5,7 +5,7 @@ package org.mydotey.artemis.config;
  */
 public interface RestPaths extends ArtemisPaths {
 
-    String REGISTRY_PATH = CONTEXT_PATH + "/api/registry/";
+    String REGISTRY_PATH = CONTEXT_PATH + "api/registry/";
     String REGISTRY_REGISTER_RELATIVE_PATH = "register.json";
     String REGISTRY_UNREGISTER_RELATIVE_PATH = "unregister.json";
     String REGISTRY_HEARTBEAT_RELATIVE_PATH = "heartbeat.json";
@@ -13,7 +13,7 @@ public interface RestPaths extends ArtemisPaths {
     String REGISTRY_UNREGISTER_FULL_PATH = REGISTRY_PATH + REGISTRY_UNREGISTER_RELATIVE_PATH;
     String REGISTRY_HEARTBEAT_FULL_PATH = REGISTRY_PATH + REGISTRY_HEARTBEAT_RELATIVE_PATH;
 
-    String REPLICATION_PATH = CONTEXT_PATH + "/api/replication/";
+    String REPLICATION_PATH = CONTEXT_PATH + "api/replication/";
     String REPLICATION_REGISTRY_PATH = REPLICATION_PATH + "registry/";
     String REPLICATION_REGISTRY_REGISTER_RELATIVE_PATH = "register.json";
     String REPLICATION_REGISTRY_UNREGISTER_RELATIVE_PATH = "unregister.json";
@@ -28,7 +28,7 @@ public interface RestPaths extends ArtemisPaths {
     String REPLICATION_REGISTRY_GET_SERVICES_FULL_PATH = REPLICATION_REGISTRY_PATH
         + REPLICATION_REGISTRY_GET_SERVICES_RELATIVE_PATH;
 
-    String CLUSTER_PATH = CONTEXT_PATH + "/api/cluster/";
+    String CLUSTER_PATH = CONTEXT_PATH + "api/cluster/";
     String CLUSTER_NODES_RELATIVE_PATH = "nodes.json";
     String CLUSTER_UP_REGISTRY_NODES_RELATIVE_PATH = "up-registry-nodes.json";
     String CLUSTER_UP_DISCOVERY_NODES_RELATIVE_PATH = "up-discovery-nodes.json";
@@ -36,7 +36,7 @@ public interface RestPaths extends ArtemisPaths {
     String CLUSTER_UP_REGISTRY_NODES_FULL_PATH = CLUSTER_PATH + CLUSTER_UP_REGISTRY_NODES_RELATIVE_PATH;
     String CLUSTER_UP_DISCOVERY_NODES_FULL_PATH = CLUSTER_PATH + CLUSTER_UP_DISCOVERY_NODES_RELATIVE_PATH;
 
-    String STATUS_PATH = CONTEXT_PATH + "/api/status/";
+    String STATUS_PATH = CONTEXT_PATH + "api/status/";
     String STATUS_NODE_RELATIVE_PATH = "node.json";
     String STATUS_CLUSTER_RELATIVE_PATH = "cluster.json";
     String STATUS_LEASES_RELATIVE_PATH = "leases.json";
@@ -50,10 +50,10 @@ public interface RestPaths extends ArtemisPaths {
     String STATUS_CONFIG_FULL_PATH = STATUS_PATH + STATUS_CONFIG_RELATIVE_PATH;
     String STATUS_DEPLOYMENT_FULL_PATH = STATUS_PATH + STATUS_DEPLOYMENT_RELATIVE_PATH;
 
-    String STATUS_WEBSOCKET_PATH = STATUS_PATH + "/websocket";
+    String STATUS_WEBSOCKET_PATH = STATUS_PATH + "websocket";
     String STATUS_WEBSOCKET_CONNECTION_RELATIVE_PATH = "connection.json";
 
-    String DISCOVERY_PATH = CONTEXT_PATH + "/api/discovery/";
+    String DISCOVERY_PATH = CONTEXT_PATH + "api/discovery/";
     String DISCOVERY_LOOKUP_RELATIVE_PATH = "lookup.json";
     String DISCOVERY_GET_SERVICE_RELATIVE_PATH = "service.json";
     String DISCOVERY_GET_SERVICES_RELATIVE_PATH = "services.json";
