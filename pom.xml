@@ -146,6 +146,7 @@
         <module>artemis-management</module>
         <module>artemis-server</module>
         <module>artemis-package</module>
+        <module>artemis-test</module>
     </modules>
 
     <dependencyManagement>
@@ -369,6 +370,11 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
+                <groupId>org.mydotey.artemis</groupId>
+                <artifactId>artemis-test</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>javax.servlet</groupId>
                 <artifactId>javax.servlet-api</artifactId>
                 <version>${servlet-api.version}</version>
@@ -399,10 +405,10 @@
                 <scope>test</scope>
             </dependency>
             <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-test</artifactId>
-                <version>${spring.version}</version>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-test</artifactId>
                 <scope>test</scope>
+                <version>${spring-boot.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.jayway.jsonpath</groupId>

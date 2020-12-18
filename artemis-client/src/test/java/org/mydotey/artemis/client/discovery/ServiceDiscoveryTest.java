@@ -16,6 +16,7 @@ import org.mydotey.artemis.client.test.utils.ArtemisClientConstants;
 import org.mydotey.artemis.client.test.utils.Instances;
 import org.mydotey.artemis.client.test.utils.Services;
 import org.mydotey.artemis.discovery.DiscoveryConfig;
+import org.mydotey.java.ThreadExtension;
 
 import java.util.List;
 import java.util.Map;
@@ -43,6 +44,7 @@ public class ServiceDiscoveryTest {
             serviceRepository.registerServiceChangeListener(discoveryConfig, listener);
             serviceRepository.serviceDiscovery.reload(discoveryConfig);
 
+            ThreadExtension.sleep(1000);
             Assert.assertTrue(listener.getServiceChangeEvents().size() >= 1);
             for (ServiceChangeEvent event : listener.getServiceChangeEvents()) {
                 Assert.assertEquals(InstanceChange.ChangeType.RELOAD, event.changeType());
