@@ -11,7 +11,7 @@ import org.mydotey.artemis.Instance;
 import org.mydotey.artemis.InstanceChange;
 import org.mydotey.artemis.registry.HasFailedInstances;
 import org.mydotey.artemis.util.ResponseStatusUtil;
- 
+
 /**
  * Created by fang_j on 10/07/2016.
  */
@@ -26,10 +26,10 @@ public class Instances {
         instance.setMachineName(new BigInteger(130, random).toString(32));
         instance.setPort(8090);
         instance.setProtocol("http");
-        instance.setRegionId("SHA");
+        instance.setRegionId("lab");
         instance.setStatus(new BigInteger(130, random).toString(32));
         instance.setUrl(new BigInteger(130, random).toString(32));
-        instance.setZoneId("SHAJQ");
+        instance.setZoneId("zone1");
         return instance;
     }
 
@@ -45,7 +45,6 @@ public class Instances {
         instanceChange.setInstance(instance);
         return instanceChange;
     }
-
 
     public static Set<Instance> newInstances(final int length, final Set<String> serviceIds) {
         final Set<Instance> instances = new HashSet<Instance>();

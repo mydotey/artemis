@@ -10,12 +10,12 @@ import org.mydotey.artemis.InstanceChange;
 import org.mydotey.artemis.Service;
 import org.mydotey.artemis.client.ServiceChangeEvent;
 import org.mydotey.artemis.client.ServiceChangeListener;
+import org.mydotey.artemis.client.registry.InstanceRegistry;
 import org.mydotey.artemis.client.registry.InstanceRepository;
 import org.mydotey.artemis.client.test.utils.ArtemisClientConstants;
 import org.mydotey.artemis.client.test.utils.Instances;
 import org.mydotey.artemis.client.test.utils.Services;
 import org.mydotey.artemis.discovery.DiscoveryConfig;
-import org.mydotey.java.ThreadExtension;
 
 import java.util.List;
 import java.util.Map;
@@ -33,8 +33,8 @@ public class ServiceDiscoveryTest {
         final List<Service> services = Lists.newArrayList();
 
         Assert.assertEquals(0, services.size());
-        Set<String> serviceKeys = Sets.newHashSet(ArtemisClientConstants.RegistryService.Net.serviceKey,
-            ArtemisClientConstants.RegistryService.Java.serviceKey);
+        Set<String> serviceKeys = Sets.newHashSet(ArtemisClientConstants.Services.serviceId1,
+            ArtemisClientConstants.Services.serviceId2);
         Map<String, ServiceChangeListener> serviceChangeListeners = Maps.newHashMap();
         for (String serviceKey : serviceKeys) {
             DefaultServiceChangeListener listener = new DefaultServiceChangeListener();
@@ -58,7 +58,7 @@ public class ServiceDiscoveryTest {
         final DiscoveryConfig discoveryConfig = new DiscoveryConfig(serviceId);
         final Set<Instance> instances = Sets.newHashSet(Instances.newInstance(serviceId),
             Instances.newInstance(serviceId));
-        final CountDownLatch addCount = new CountDownLatch(instances.size() * 2);
+        final CountDownLatch addCount = new CountDownLatch(instances.size());
         final CountDownLatch deleteCount = new CountDownLatch(instances.size());
         final List<ServiceChangeEvent> serviceChangeEvents = Lists.newArrayList();
 
@@ -75,14 +75,17 @@ public class ServiceDiscoveryTest {
                 }
             }
         });
-        ThreadExtension.sleep(2000); // wait server service discovery websocket session created.
 
-        final InstanceRepository instanceRepository = new InstanceRepository(
+        InstanceRepository instanceRepository = new InstanceRepository(
             ArtemisClientConstants.RegistryClientConfig);
         instanceRepository.register(instances);
-        Assert.assertTrue(addCount.await(2, TimeUnit.SECONDS));
+        new InstanceRegistry(instanceRepository, ArtemisClientConstants.RegistryClientConfig);
+
+        Assert.assertTrue(addCount.await(1, TimeUnit.SECONDS));
+
         instanceRepository.unregister(instances);
-        Assert.assertTrue(deleteCount.await(2, TimeUnit.SECONDS));
-        Assert.assertTrue(3 * instances.size() <= serviceChangeEvents.size());
+        Assert.assertTrue(deleteCount.await(1, TimeUnit.SECONDS));
+
+        Assert.assertTrue(2 * instances.size() <= serviceChangeEvents.size());
     }
 }

@@ -1,9 +1,17 @@
 package org.mydotey.artemis.client.test.utils;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
+import org.mydotey.artemis.Instance;
 import org.mydotey.artemis.client.ArtemisClientManagerConfig;
 import org.mydotey.artemis.client.common.AddressManager;
 import org.mydotey.artemis.client.common.ArtemisClientConfig;
 import org.mydotey.artemis.client.discovery.ArtemisDiscoveryHttpClient;
+import org.mydotey.artemis.client.registry.ArtemisRegistryHttpClient;
 import org.mydotey.artemis.config.DeploymentConfig;
 import org.mydotey.scf.ConfigurationManager;
 import org.mydotey.scf.facade.ConfigurationManagers;
@@ -24,12 +32,13 @@ public class ArtemisClientConstants {
     public static ArtemisClientConfig DiscoveryClientConfig;
     public static ArtemisClientConfig RegistryClientConfig;
     public static ArtemisDiscoveryHttpClient DiscoveryHttpClient;
+    public static ArtemisRegistryHttpClient RegistryHttpClient;
     public static String ClientId;
 
-    public static final String DOMAIN_ARTEMIS_SERVICE_URL = "{need to replace}";
+    public static final String DOMAIN_ARTEMIS_SERVICE_URL = "http://192.168.56.11:8080";
 
     static {
-        DeploymentConfig.init("SHA", "jqsha", "0", "http", 8080, "artemis");
+        DeploymentConfig.init("lab", "zone1", "0", "http", 8080, "artemis");
         final ConfigurationManager manager = ConfigurationManagers
             .newManager(ConfigurationManagers.newConfigBuilder().setName("test").addSource(1, MemSource).build());
         Properties = new StringProperties(manager);
@@ -43,6 +52,23 @@ public class ArtemisClientConstants {
         RegistryClientConfig = new ArtemisClientConfig(ClientId, ManagerConfig,
             AddressManager.getRegistryAddressManager(ClientId, ManagerConfig));
         DiscoveryHttpClient = new ArtemisDiscoveryHttpClient(DiscoveryClientConfig);
+        RegistryHttpClient = new ArtemisRegistryHttpClient(
+            ArtemisClientConstants.RegistryClientConfig);
+
+        generateRegistryData();
+    }
+
+    private static void generateRegistryData() {
+        Instance instance1 = Instances.newInstance(Services.serviceId1);
+        Instance instance2 = Instances.newInstance(Services.serviceId2);
+        Runnable generate = () -> {
+            RegistryHttpClient.register(new HashSet<Instance>(
+                Arrays.asList(instance1, instance2)));
+        };
+        generate.run();
+
+        ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+        executorService.scheduleWithFixedDelay(generate, 5, 5, TimeUnit.SECONDS);
     }
 
     public static void setDomain(final String domain) {
@@ -54,15 +80,8 @@ public class ArtemisClientConstants {
         MemSource.setPropertyValue(ClientId + ".discovery.http-client.client.socket-timout", "10000");
     }
 
-    public interface RegistryService {
-        public interface Net {
-            String serviceKey = "framework.soa.v1.registryservice";
-            String serviceCode = "10002";
-        }
-
-        public interface Java {
-            String serviceKey = "framework.soa4j.registryservice.v1.registryservice";
-            String serviceCode = "10586";
-        }
+    public interface Services {
+        String serviceId1 = "service1";
+        String serviceId2 = "service2";
     }
 }

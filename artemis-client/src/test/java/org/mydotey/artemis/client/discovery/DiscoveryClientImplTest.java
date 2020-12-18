@@ -21,7 +21,7 @@ public class DiscoveryClientImplTest {
 
     @Test
     public void testGetService() {
-        final String serviceId = ArtemisClientConstants.RegistryService.Net.serviceKey;
+        final String serviceId = ArtemisClientConstants.Services.serviceId1;
         final DiscoveryConfig discoveryConfig = new DiscoveryConfig(serviceId);
         final Service service = _discoveryClientImpl.getService(discoveryConfig);
         Assert.assertEquals(serviceId, service.getServiceId());

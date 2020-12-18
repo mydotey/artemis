@@ -41,7 +41,7 @@ public class InstanceRegistry {
     private final InstanceRepository _instanceRepository;
     private final Property<String, Integer> _ttl;
     private final Property<String, Integer> _interval;
-    private volatile long _lastHeartbeatTime = System.currentTimeMillis();
+    private volatile long _lastHeartbeatTime;
     private volatile long _heartbeatAcceptStartTime = System.currentTimeMillis();
     private final WebSocketSessionContext _sessionContext;
     private final EventMetric _heartbeatStatus;
@@ -87,7 +87,7 @@ public class InstanceRegistry {
                 config.key("heartbeat.accept-latency"))));
         final DynamicScheduledThreadConfig dynamicScheduledThreadConfig = new DynamicScheduledThreadConfig(
             config.properties(),
-            new RangeValueConfig<Integer>(5 * 1000, 1 * 1000, 60 * 1000),
+            new RangeValueConfig<Integer>(1, 1, 1 * 60 * 60 * 1000),
             new RangeValueConfig<Integer>(1000, 500, 90 * 1000));
         _heartbeatChecker = new DynamicScheduledThread(config.key("instance-registry.heartbeat-checker"),
             new Runnable() {

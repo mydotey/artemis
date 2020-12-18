@@ -27,7 +27,7 @@ public class ArtemisDiscoveryHttpClientTest {
     @Test
     public void testGetService_ShouldReturnIntances() throws Exception {
         final Service service = _client
-            .getService(new DiscoveryConfig(ArtemisClientConstants.RegistryService.Net.serviceKey));
+            .getService(new DiscoveryConfig(ArtemisClientConstants.Services.serviceId1));
         Assert.assertNotNull(service);
         Assert.assertTrue(service.getInstances().size() > 0);
     }
@@ -36,14 +36,14 @@ public class ArtemisDiscoveryHttpClientTest {
     public void testGetServices() {
         final String serviceId = Services.newServiceId();
         final List<String> serviceIds = Lists.newArrayList(serviceId,
-            ArtemisClientConstants.RegistryService.Net.serviceKey);
+            ArtemisClientConstants.Services.serviceId1);
         final List<DiscoveryConfig> discoveryConfigs = Lists.newArrayList(new DiscoveryConfig(serviceId),
-            new DiscoveryConfig(ArtemisClientConstants.RegistryService.Net.serviceKey));
+            new DiscoveryConfig(ArtemisClientConstants.Services.serviceId1));
         final List<Service> services = _client.getServices(discoveryConfigs);
         Assert.assertEquals(discoveryConfigs.size(), services.size());
         for (final Service service : services) {
             Assert.assertTrue(serviceIds.contains(service.getServiceId()));
-            if (ArtemisClientConstants.RegistryService.Net.serviceKey
+            if (ArtemisClientConstants.Services.serviceId1
                 .equals(service.getServiceId())) {
                 Assert.assertTrue(service.getInstances().size() > 0);
             } else {
