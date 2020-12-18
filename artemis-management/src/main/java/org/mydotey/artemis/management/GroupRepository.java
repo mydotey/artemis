@@ -33,6 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Created by fang_j on 10/07/2016.
@@ -78,7 +79,7 @@ public class GroupRepository {
     private final ServiceInstanceDao serviceInstanceDao = ServiceInstanceDao.INSTANCE;
 
     private final RegistryRepository registryRepository = RegistryRepository.getInstance();
-    private final DynamicScheduledThread cacheRefresher;
+    private DynamicScheduledThread cacheRefresher;
     private final Property<String, Integer> managementDBSyncWaitTimeProperty = ArtemisConfig.properties()
         .getIntProperty("artemis.management.db-sync.wait-time", 2 * 1000, new RangeValueFilter<>(0, 60 * 1000));
     private volatile long lastRefreshTime;
@@ -96,7 +97,16 @@ public class GroupRepository {
 
     private volatile SearchTree<String, GroupOperations> operationsSearchTree = new SearchTree<>();
 
+    private AtomicBoolean _inited = new AtomicBoolean();
+
     private GroupRepository() {
+
+    }
+
+    public void init() {
+        if (!_inited.compareAndSet(false, true))
+            return;
+
         DynamicScheduledThreadConfig dynamicScheduledThreadConfig = new DynamicScheduledThreadConfig(
             ArtemisConfig.properties(),
             new RangeValueConfig<Integer>(0, 0, 10 * 1000),

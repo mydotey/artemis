@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Created by fang_j on 10/07/2016.
@@ -49,12 +50,21 @@ public class ZoneRepository {
     private volatile boolean lastRefreshSuccess;
     private volatile Map<ZoneKey, ZoneOperations> zoneOperations = Maps.newHashMap();
     private volatile ListMultimap<String, ZoneOperations> serviceZoneOperations = ArrayListMultimap.create();
-    private final DynamicScheduledThread cacheRefresher;
+    private DynamicScheduledThread cacheRefresher;
     private final ZoneOperationDao zoneOperationDao = ZoneOperationDao.INSTANCE;
     private final ZoneOperationLogDao zoneOperationLogDao = ZoneOperationLogDao.INSTANCE;
     private final RegistryRepository registryRepository = RegistryRepository.getInstance();
 
+    private AtomicBoolean _inited = new AtomicBoolean();
+
     private ZoneRepository() {
+
+    }
+
+    public void init() {
+        if (!_inited.compareAndSet(false, true))
+            return;
+
         DynamicScheduledThreadConfig dynamicScheduledThreadConfig = new DynamicScheduledThreadConfig(
             ArtemisConfig.properties(),
             new RangeValueConfig<Integer>(0, 0, 10 * 1000),

@@ -33,12 +33,17 @@ public class ManagementInitializer implements NodeInitializer {
 
         DataConfig.init();
 
-        NodeManager.INSTANCE.registerInitializer(this);
+        GroupRepository.getInstance().init();
+        ZoneRepository.getInstance().init();
+        ManagementRepository.getInstance().init();
 
         ManagementRepository.getInstance().addFilter(GroupDiscoveryFilter.getInstance());
 
+        NodeManager.INSTANCE.registerInitializer(this);
+
         DiscoveryFilters.INSTANCE.registerFilter(GroupDiscoveryFilter.getInstance(),
             ManagementDiscoveryFilter.getInstance());
+
         NotificationCenter.getInstance().registerFilter(new ManagementNotificationFilter());
     }
 

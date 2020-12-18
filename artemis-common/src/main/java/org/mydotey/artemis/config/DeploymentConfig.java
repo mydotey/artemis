@@ -2,9 +2,7 @@ package org.mydotey.artemis.config;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.mydotey.java.ObjectExtension;
 import org.mydotey.java.StringExtension;
 import org.mydotey.java.net.NetworkInterfaceManager;
 import org.mydotey.scf.ConfigurationManager;
@@ -85,32 +83,6 @@ public final class DeploymentConfig {
 
         _machineName = NetworkInterfaceManager.INSTANCE.hostName();
         _ip = NetworkInterfaceManager.INSTANCE.hostIP();
-
-        logDeploymentInfo();
-    }
-
-    private static AtomicBoolean _inited = new AtomicBoolean();
-
-    public static void init(String regionId, String zoneId, String appId, String protocol, int port, String path) {
-        ObjectExtension.requireNonBlank(regionId, "region");
-        ObjectExtension.requireNonBlank(zoneId, "zone");
-        ObjectExtension.requireNonBlank(appId, "appId");
-        ObjectExtension.requireNonBlank(protocol, "protocol");
-
-        if (!_inited.compareAndSet(false, true)) {
-            _logger.warn("DeploymentConfig init method can be only invoked once!");
-            return;
-        }
-
-        _regionId = regionId;
-        _zoneId = zoneId;
-        _appId = appId;
-
-        if (port > 0)
-            _port = port;
-
-        _protocol = protocol;
-        _path = path;
 
         logDeploymentInfo();
     }

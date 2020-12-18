@@ -12,7 +12,8 @@ import org.mydotey.artemis.client.common.AddressManager;
 import org.mydotey.artemis.client.common.ArtemisClientConfig;
 import org.mydotey.artemis.client.discovery.ArtemisDiscoveryHttpClient;
 import org.mydotey.artemis.client.registry.ArtemisRegistryHttpClient;
-import org.mydotey.artemis.config.DeploymentConfig;
+import org.mydotey.artemis.server.App;
+import org.mydotey.java.ThreadExtension;
 import org.mydotey.scf.ConfigurationManager;
 import org.mydotey.scf.facade.ConfigurationManagers;
 import org.mydotey.scf.facade.StringProperties;
@@ -35,10 +36,11 @@ public class ArtemisClientConstants {
     public static ArtemisRegistryHttpClient RegistryHttpClient;
     public static String ClientId;
 
-    public static final String DOMAIN_ARTEMIS_SERVICE_URL = "http://192.168.56.11:8080";
+    public static final String DOMAIN_ARTEMIS_SERVICE_URL = "http://127.0.0.1:8080";
 
     static {
-        DeploymentConfig.init("lab", "zone1", "0", "http", 8080, "artemis");
+        startServer();
+
         final ConfigurationManager manager = ConfigurationManagers
             .newManager(ConfigurationManagers.newConfigBuilder().setName("test").addSource(1, MemSource).build());
         Properties = new StringProperties(manager);
@@ -56,6 +58,13 @@ public class ArtemisClientConstants {
             ArtemisClientConstants.RegistryClientConfig);
 
         generateRegistryData();
+    }
+
+    private static void startServer() {
+        System.setProperty("host.ip", "127.0.0.1");
+        System.setProperty("artemis.management.enabled", "false");
+        App.main(new String[0]);
+        ThreadExtension.sleep(5);
     }
 
     private static void generateRegistryData() {

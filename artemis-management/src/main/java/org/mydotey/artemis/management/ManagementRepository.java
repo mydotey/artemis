@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.google.common.collect.*;
 
@@ -107,7 +108,16 @@ public class ManagementRepository {
     private DynamicScheduledThread _cacheRefresher;
     private final List<DiscoveryFilter> filters = Lists.newArrayList();
 
+    private AtomicBoolean _inited = new AtomicBoolean();
+
     private ManagementRepository() {
+
+    }
+
+    public void init() {
+        if (!_inited.compareAndSet(false, true))
+            return;
+
         DynamicScheduledThreadConfig dynamicScheduledThreadConfig = new DynamicScheduledThreadConfig(
             ArtemisConfig.properties(),
             new RangeValueConfig<Integer>(0, 0, 10 * 1000), new RangeValueConfig<Integer>(1000, 200, 60 * 1000));
