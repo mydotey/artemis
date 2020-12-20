@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.mydotey.artemis</groupId>
         <artifactId>artemis</artifactId>
-        <version>2.0.0</version>
+        <version>2.0.1</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -71,10 +71,6 @@
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.springfox</groupId>
-            <artifactId>springfox-boot-starter</artifactId>
         </dependency>
         <dependency>
             <groupId>javax.servlet</groupId>
