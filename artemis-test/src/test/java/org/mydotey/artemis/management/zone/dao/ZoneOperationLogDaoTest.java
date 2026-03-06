@@ -18,7 +18,7 @@ import java.util.List;
  */
 @Transactional
 public class ZoneOperationLogDaoTest extends ArtemisTest {
-    ZoneOperationLogDao zoneOperationLogDao = ZoneOperationLogDao.INSTANCE;
+    ZoneOperationLogDao zoneOperationLogDao = ZoneOperationLogDao.getInstance();
 
     @Test
     public void testInsert() {

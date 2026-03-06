@@ -18,13 +18,45 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Created by fang_j on 10/07/2016.
+ * Abstract GroupDao with built-in factory method.
+ * <p>
+ * Use GroupDao.getInstance() to get the appropriate implementation:
+ * - MySQL: MysqlGroupDao (batch + ON DUPLICATE KEY UPDATE)
+ * - SQLite/Other: GenericGroupDao (check-exists-then-insert/update)
+ * <p>
+ * Database type is determined from configuration, no DB connection needed.
  */
-public class GroupDao {
-    public static final GroupDao INSTANCE = new GroupDao();
+public abstract class GroupDao {
 
-    private GroupDao() {
+    /**
+     * Holds the lazily-created singleton instance.
+     */
+    private static volatile GroupDao instance;
+
+    /**
+     * Get the appropriate GroupDao implementation based on configuration.
+     * Lazy initialization on first call.
+     */
+    public static GroupDao getInstance() {
+        if (instance == null) {
+            synchronized (GroupDao.class) {
+                if (instance == null) {
+                    if (DataConfig.isMySQL()) {
+                        instance = new MysqlGroupDao();
+                    } else {
+                        instance = new GenericGroupDao();
+                    }
+                }
+            }
+        }
+        return instance;
     }
+
+    
+
+    protected GroupDao() {}
+
+    // ========== Common Methods (all implementations share these) ==========
 
     protected GroupModel generateGroup(GroupModel group) {
         GroupModel filter = new GroupModel();
@@ -80,67 +112,6 @@ public class GroupDao {
                     } else {
                         ps.setLong(1, id);
                     }
-                }
-            });
-    }
-
-    protected void insertOrUpdate(final GroupModel... groups) {
-        insertOrUpdate(Lists.newArrayList(groups));
-    }
-
-    protected void insertOrUpdate(final List<GroupModel> models) {
-        checkInsertOrUpdateArgument(models);
-        DataConfig.jdbcTemplate().batchUpdate(
-            "insert into service_group (service_id, region_id, zone_id, name, app_id, description,status) values (?,?,?,?,?,?,?)"
-                + " on duplicate key update app_id=?, description=?, status=?, deleted=false",
-            new BatchPreparedStatementSetter() {
-                @Override
-                public void setValues(PreparedStatement ps, int i) throws SQLException {
-                    GroupModel model = models.get(i);
-                    ps.setString(1, model.getServiceId());
-                    ps.setString(2, model.getRegionId());
-                    ps.setString(3, model.getZoneId());
-                    ps.setString(4, model.getName());
-                    ps.setString(5, model.getAppId());
-                    ps.setString(6, model.getDescription());
-                    ps.setString(7, model.getStatus());
-                    ps.setString(8, model.getAppId());
-                    ps.setString(9, model.getDescription());
-                    ps.setString(10, model.getStatus());
-                }
-
-                @Override
-                public int getBatchSize() {
-                    return models.size();
-                }
-            });
-    }
-
-    protected void insert(final GroupModel... groups) {
-        insert(Lists.newArrayList(groups));
-    }
-
-    protected void insert(final List<GroupModel> models) {
-        checkInsertOrUpdateArgument(models);
-        DataConfig.jdbcTemplate().batchUpdate(
-            "insert into service_group (service_id, region_id, zone_id, name, app_id, description,status) values (?,?,?,?,?,?,?)"
-                + " on duplicate key update deleted=false",
-            new BatchPreparedStatementSetter() {
-                @Override
-                public void setValues(PreparedStatement ps, int i) throws SQLException {
-                    GroupModel model = models.get(i);
-                    ps.setString(1, model.getServiceId());
-                    ps.setString(2, model.getRegionId());
-                    ps.setString(3, model.getZoneId());
-                    ps.setString(4, model.getName());
-                    ps.setString(5, model.getAppId());
-                    ps.setString(6, model.getDescription());
-                    ps.setString(7, model.getStatus());
-                }
-
-                @Override
-                public int getBatchSize() {
-                    return models.size();
                 }
             });
     }
@@ -223,6 +194,215 @@ public class GroupDao {
             ValueCheckers.notNullOrWhiteSpace(model.getName(), "group.name");
             ValueCheckers.notNullOrWhiteSpace(model.getAppId(), "group.appId");
             ValueCheckers.notNullOrWhiteSpace(model.getStatus(), "group.status");
+        }
+    }
+
+    // ========== Abstract Methods (database-specific) ==========
+
+    protected abstract void insertOrUpdate(GroupModel... groups);
+
+    protected abstract void insertOrUpdate(List<GroupModel> models);
+
+    protected abstract void insert(GroupModel... groups);
+
+    protected abstract void insert(List<GroupModel> models);
+
+    // ========== MySQL Implementation ==========
+
+    private static class MysqlGroupDao extends GroupDao {
+        @Override
+        protected void insertOrUpdate(GroupModel... groups) {
+            insertOrUpdate(Lists.newArrayList(groups));
+        }
+
+        @Override
+        protected void insertOrUpdate(final List<GroupModel> models) {
+            checkInsertOrUpdateArgument(models);
+            DataConfig.jdbcTemplate().batchUpdate(
+                "insert into service_group (service_id, region_id, zone_id, name, app_id, description,status) values (?,?,?,?,?,?,?)"
+                    + " on duplicate key update app_id=?, description=?, status=?, deleted=false",
+                new BatchPreparedStatementSetter() {
+                    @Override
+                    public void setValues(PreparedStatement ps, int i) throws SQLException {
+                        GroupModel model = models.get(i);
+                        ps.setString(1, model.getServiceId());
+                        ps.setString(2, model.getRegionId());
+                        ps.setString(3, model.getZoneId());
+                        ps.setString(4, model.getName());
+                        ps.setString(5, model.getAppId());
+                        ps.setString(6, model.getDescription());
+                        ps.setString(7, model.getStatus());
+                        ps.setString(8, model.getAppId());
+                        ps.setString(9, model.getDescription());
+                        ps.setString(10, model.getStatus());
+                    }
+
+                    @Override
+                    public int getBatchSize() {
+                        return models.size();
+                    }
+                });
+        }
+
+        @Override
+        protected void insert(GroupModel... groups) {
+            insert(Lists.newArrayList(groups));
+        }
+
+        @Override
+        protected void insert(final List<GroupModel> models) {
+            checkInsertOrUpdateArgument(models);
+            DataConfig.jdbcTemplate().batchUpdate(
+                "insert into service_group (service_id, region_id, zone_id, name, app_id, description,status) values (?,?,?,?,?,?,?)"
+                    + " on duplicate key update deleted=false",
+                new BatchPreparedStatementSetter() {
+                    @Override
+                    public void setValues(PreparedStatement ps, int i) throws SQLException {
+                        GroupModel model = models.get(i);
+                        ps.setString(1, model.getServiceId());
+                        ps.setString(2, model.getRegionId());
+                        ps.setString(3, model.getZoneId());
+                        ps.setString(4, model.getName());
+                        ps.setString(5, model.getAppId());
+                        ps.setString(6, model.getDescription());
+                        ps.setString(7, model.getStatus());
+                    }
+
+                    @Override
+                    public int getBatchSize() {
+                        return models.size();
+                    }
+                });
+        }
+    }
+
+    // ========== Generic Implementation (for SQLite and others) ==========
+
+    private static class GenericGroupDao extends GroupDao {
+        @Override
+        protected void insertOrUpdate(GroupModel... groups) {
+            insertOrUpdate(Lists.newArrayList(groups));
+        }
+
+        @Override
+        protected void insertOrUpdate(final List<GroupModel> models) {
+            checkInsertOrUpdateArgument(models);
+            for (GroupModel model : models) {
+                upsert(model);
+            }
+        }
+
+        @Override
+        protected void insert(GroupModel... groups) {
+            insert(Lists.newArrayList(groups));
+        }
+
+        @Override
+        protected void insert(final List<GroupModel> models) {
+            checkInsertOrUpdateArgument(models);
+            for (GroupModel model : models) {
+                insertIfNotExists(model);
+            }
+        }
+
+        /**
+         * Database-agnostic upsert: check if record exists, then insert or update
+         */
+        private void upsert(final GroupModel model) {
+            // Check if record exists
+            final String checkSql = "select id, app_id, description, status from service_group where service_id=? and region_id=? and zone_id=? and name=?";
+            List<Object[]> existing = DataConfig.jdbcTemplate().query(new PreparedStatementCreator() {
+                @Override
+                public PreparedStatement createPreparedStatement(Connection conn) throws SQLException {
+                    PreparedStatement ps = conn.prepareStatement(checkSql);
+                    ps.setString(1, model.getServiceId());
+                    ps.setString(2, model.getRegionId());
+                    ps.setString(3, model.getZoneId());
+                    ps.setString(4, model.getName());
+                    return ps;
+                }
+            }, new RowMapper<Object[]>() {
+                @Override
+                public Object[] mapRow(ResultSet rs, int rowNum) throws SQLException {
+                    return new Object[]{rs.getLong(1), rs.getString(2), rs.getString(3), rs.getString(4)};
+                }
+            });
+
+            if (existing.isEmpty()) {
+                // Insert new record
+                final String insertSql = "insert into service_group (service_id, region_id, zone_id, name, app_id, description,status) values (?,?,?,?,?,?,?)";
+                DataConfig.jdbcTemplate().update(new PreparedStatementCreator() {
+                    @Override
+                    public PreparedStatement createPreparedStatement(Connection conn) throws SQLException {
+                        PreparedStatement ps = conn.prepareStatement(insertSql);
+                        ps.setString(1, model.getServiceId());
+                        ps.setString(2, model.getRegionId());
+                        ps.setString(3, model.getZoneId());
+                        ps.setString(4, model.getName());
+                        ps.setString(5, model.getAppId());
+                        ps.setString(6, model.getDescription());
+                        ps.setString(7, model.getStatus());
+                        return ps;
+                    }
+                });
+            } else {
+                // Update existing record
+                final String updateSql = "update service_group set app_id=?, description=?, status=?, deleted=false where id=?";
+                DataConfig.jdbcTemplate().update(new PreparedStatementCreator() {
+                    @Override
+                    public PreparedStatement createPreparedStatement(Connection conn) throws SQLException {
+                        PreparedStatement ps = conn.prepareStatement(updateSql);
+                        ps.setString(1, model.getAppId());
+                        ps.setString(2, model.getDescription());
+                        ps.setString(3, model.getStatus());
+                        ps.setLong(4, (Long) existing.get(0)[0]);
+                        return ps;
+                    }
+                });
+            }
+        }
+
+        /**
+         * Database-agnostic insert: only insert if record doesn't exist
+         */
+        private void insertIfNotExists(final GroupModel model) {
+            // Check if record exists
+            final String checkSql = "select id from service_group where service_id=? and region_id=? and zone_id=? and name=?";
+            List<Long> existing = DataConfig.jdbcTemplate().query(new PreparedStatementCreator() {
+                @Override
+                public PreparedStatement createPreparedStatement(Connection conn) throws SQLException {
+                    PreparedStatement ps = conn.prepareStatement(checkSql);
+                    ps.setString(1, model.getServiceId());
+                    ps.setString(2, model.getRegionId());
+                    ps.setString(3, model.getZoneId());
+                    ps.setString(4, model.getName());
+                    return ps;
+                }
+            }, new RowMapper<Long>() {
+                @Override
+                public Long mapRow(ResultSet rs, int rowNum) throws SQLException {
+                    return rs.getLong(1);
+                }
+            });
+
+            if (existing.isEmpty()) {
+                // Insert new record only if not exists
+                final String insertSql = "insert into service_group (service_id, region_id, zone_id, name, app_id, description,status) values (?,?,?,?,?,?,?)";
+                DataConfig.jdbcTemplate().update(new PreparedStatementCreator() {
+                    @Override
+                    public PreparedStatement createPreparedStatement(Connection conn) throws SQLException {
+                        PreparedStatement ps = conn.prepareStatement(insertSql);
+                        ps.setString(1, model.getServiceId());
+                        ps.setString(2, model.getRegionId());
+                        ps.setString(3, model.getZoneId());
+                        ps.setString(4, model.getName());
+                        ps.setString(5, model.getAppId());
+                        ps.setString(6, model.getDescription());
+                        ps.setString(7, model.getStatus());
+                        return ps;
+                    }
+                });
+            }
         }
     }
 }

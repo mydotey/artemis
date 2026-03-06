@@ -14,7 +14,7 @@ import com.google.common.collect.Lists;
  * Created by fang_j on 10/07/2016.
  */
 public class InstanceDaoTest extends ArtemisTest {
-    InstanceDao instanceDao = InstanceDao.INSTANCE;
+    InstanceDao instanceDao = InstanceDao.getInstance();
 
     @Test
     public void testInsert() {

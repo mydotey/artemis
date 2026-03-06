@@ -69,14 +69,14 @@ public class GroupRepository {
         return instance;
     }
 
-    private final RouteRuleDao routeRuleDao = RouteRuleDao.INSTANCE;
-    private final RouteRuleGroupDao routeRuleGroupDao = RouteRuleGroupDao.INSTANCE;
-    private final GroupDao groupDao = GroupDao.INSTANCE;
-    private final GroupOperationDao groupOperationDao = GroupOperationDao.INSTANCE;
-    private final GroupTagDao groupTagDao = GroupTagDao.INSTANCE;
-    private final GroupInstanceDao groupInstanceDao = GroupInstanceDao.INSTANCE;
-    private final BusinessDao businessDao = BusinessDao.INSTANCE;
-    private final ServiceInstanceDao serviceInstanceDao = ServiceInstanceDao.INSTANCE;
+    private final RouteRuleDao routeRuleDao = RouteRuleDao.getInstance();
+    private final RouteRuleGroupDao routeRuleGroupDao = RouteRuleGroupDao.getInstance();
+    private final GroupDao groupDao = GroupDao.getInstance();
+    private final GroupOperationDao groupOperationDao = GroupOperationDao.getInstance();
+    private final GroupTagDao groupTagDao = GroupTagDao.getInstance();
+    private final GroupInstanceDao groupInstanceDao = GroupInstanceDao.getInstance();
+    private final BusinessDao businessDao = BusinessDao.getInstance();
+    private final ServiceInstanceDao serviceInstanceDao = ServiceInstanceDao.getInstance();
 
     private final RegistryRepository registryRepository = RegistryRepository.getInstance();
     private DynamicScheduledThread cacheRefresher;

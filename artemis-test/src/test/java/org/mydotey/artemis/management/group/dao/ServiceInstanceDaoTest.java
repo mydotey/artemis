@@ -13,7 +13,7 @@ import java.util.List;
  * Created by fang_j on 10/07/2016.
  */
 public class ServiceInstanceDaoTest extends ArtemisTest {
-    private final ServiceInstanceDao serviceInstanceDao = ServiceInstanceDao.INSTANCE;
+    private final ServiceInstanceDao serviceInstanceDao = ServiceInstanceDao.getInstance();
 
     @Test
     public void testQuery() throws Exception {

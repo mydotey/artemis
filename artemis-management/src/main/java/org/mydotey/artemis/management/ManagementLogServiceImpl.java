@@ -31,15 +31,15 @@ public class ManagementLogServiceImpl implements ManagementLogService {
         return _instance;
     }
 
-    private final InstanceLogDao instanceLogDao = InstanceLogDao.INSTANCE;
-    private final ServerLogDao serverLogDao = ServerLogDao.INSTANCE;
-    private final GroupOperationLogDao groupOperationLogDao = GroupOperationLogDao.INSTANCE;
-    private final GroupLogDao groupLogDao = GroupLogDao.INSTANCE;
-    private final RouteRuleLogDao routeRuleLogDao = RouteRuleLogDao.INSTANCE;
-    private final RouteRuleGroupLogDao routeRuleGroupLogDao = RouteRuleGroupLogDao.INSTANCE;
-    private final GroupInstanceLogDao groupInstanceLogDao = GroupInstanceLogDao.INSTANCE;
-    private final ZoneOperationLogDao zoneOperationLogDao = ZoneOperationLogDao.INSTANCE;
-    private final ServiceInstanceLogDao serviceInstanceLogDao = ServiceInstanceLogDao.INSTANCE;
+    private final InstanceLogDao instanceLogDao = InstanceLogDao.getInstance();
+    private final ServerLogDao serverLogDao = ServerLogDao.getInstance();
+    private final GroupOperationLogDao groupOperationLogDao = GroupOperationLogDao.getInstance();
+    private final GroupLogDao groupLogDao = GroupLogDao.getInstance();
+    private final RouteRuleLogDao routeRuleLogDao = RouteRuleLogDao.getInstance();
+    private final RouteRuleGroupLogDao routeRuleGroupLogDao = RouteRuleGroupLogDao.getInstance();
+    private final GroupInstanceLogDao groupInstanceLogDao = GroupInstanceLogDao.getInstance();
+    private final ZoneOperationLogDao zoneOperationLogDao = ZoneOperationLogDao.getInstance();
+    private final ServiceInstanceLogDao serviceInstanceLogDao = ServiceInstanceLogDao.getInstance();
 
     private ManagementLogServiceImpl() {
 

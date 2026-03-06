@@ -22,12 +22,12 @@ import java.util.Map;
  * Created by fang_j on 10/07/2016.
  */
 public class BusinessDaoTest extends ArtemisTest {
-    private final BusinessDao businessDao = BusinessDao.INSTANCE;
-    private final RouteRuleDao routeRuleDao = RouteRuleDao.INSTANCE;
-    private final GroupDao groupDao = GroupDao.INSTANCE;
-    private final RouteRuleGroupDao routeRuleGroupDao = RouteRuleGroupDao.INSTANCE;
-    private final GroupOperationDao groupOperationDao = GroupOperationDao.INSTANCE;
-    private final GroupOperationLogDao groupOperationLogDao = GroupOperationLogDao.INSTANCE;
+    private final BusinessDao businessDao = BusinessDao.getInstance();
+    private final RouteRuleDao routeRuleDao = RouteRuleDao.getInstance();
+    private final GroupDao groupDao = GroupDao.getInstance();
+    private final RouteRuleGroupDao routeRuleGroupDao = RouteRuleGroupDao.getInstance();
+    private final GroupOperationDao groupOperationDao = GroupOperationDao.getInstance();
+    private final GroupOperationLogDao groupOperationLogDao = GroupOperationLogDao.getInstance();
 
     @Test
     public void testCreateServiceRouteRules() {

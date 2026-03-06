@@ -51,8 +51,8 @@ public class ZoneRepository {
     private volatile Map<ZoneKey, ZoneOperations> zoneOperations = Maps.newHashMap();
     private volatile ListMultimap<String, ZoneOperations> serviceZoneOperations = ArrayListMultimap.create();
     private DynamicScheduledThread cacheRefresher;
-    private final ZoneOperationDao zoneOperationDao = ZoneOperationDao.INSTANCE;
-    private final ZoneOperationLogDao zoneOperationLogDao = ZoneOperationLogDao.INSTANCE;
+    private final ZoneOperationDao zoneOperationDao = ZoneOperationDao.getInstance();
+    private final ZoneOperationLogDao zoneOperationLogDao = ZoneOperationLogDao.getInstance();
     private final RegistryRepository registryRepository = RegistryRepository.getInstance();
 
     private AtomicBoolean _inited = new AtomicBoolean();

@@ -23,13 +23,45 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Created by fang_j on 10/07/2016.
+ * Abstract GroupTagDao with built-in factory method.
+ * <p>
+ * Use GroupTagDao.getInstance() to get the appropriate implementation:
+ * - MySQL: MysqlGroupTagDao (batch + ON DUPLICATE KEY UPDATE)
+ * - SQLite/Other: GenericGroupTagDao (check-exists-then-insert/update)
+ * <p>
+ * Database type is determined from configuration, no DB connection needed.
  */
-public class GroupTagDao {
-    public static final GroupTagDao INSTANCE = new GroupTagDao();
+public abstract class GroupTagDao {
 
-    private GroupTagDao() {
+    /**
+     * Holds the lazily-created singleton instance.
+     */
+    private static volatile GroupTagDao instance;
+
+    /**
+     * Get the appropriate GroupTagDao implementation based on configuration.
+     * Lazy initialization on first call.
+     */
+    public static GroupTagDao getInstance() {
+        if (instance == null) {
+            synchronized (GroupTagDao.class) {
+                if (instance == null) {
+                    if (DataConfig.isMySQL()) {
+                        instance = new MysqlGroupTagDao();
+                    } else {
+                        instance = new GenericGroupTagDao();
+                    }
+                }
+            }
+        }
+        return instance;
     }
+
+    
+
+    protected GroupTagDao() {}
+
+    // ========== Common Methods (all implementations share these) ==========
 
     public List<GroupTagModel> query() {
         return DataConfig.jdbcTemplate().query("select group_id, tag, value from service_group_tag",
@@ -73,31 +105,6 @@ public class GroupTagDao {
         });
     }
 
-    public void insertOrUpdate(GroupTagModel... models) {
-        insertOrUpdate(Lists.newArrayList(models));
-    }
-
-    public void insertOrUpdate(final List<GroupTagModel> models) {
-        checkInsertOrUpdateArgument(models);
-        DataConfig.jdbcTemplate().batchUpdate(
-            "insert into service_group_tag (group_id, tag, value) values (?,?,?) on duplicate key update value = ?",
-            new BatchPreparedStatementSetter() {
-                @Override
-                public void setValues(PreparedStatement ps, int i) throws SQLException {
-                    GroupTagModel model = models.get(i);
-                    ps.setLong(1, model.getGroupId());
-                    ps.setString(2, model.getTag());
-                    ps.setString(3, model.getValue());
-                    ps.setString(4, model.getValue());
-                }
-
-                @Override
-                public int getBatchSize() {
-                    return models.size();
-                }
-            });
-    }
-
     protected List<GroupTagModel> query(final String condition, final List<String> args) {
         final String sql = "SELECT id, group_id, tag, value, create_time, DataChange_LastTime from service_group_tag";
         return DataConfig.jdbcTemplate().query(new PreparedStatementCreator() {
@@ -130,13 +137,116 @@ public class GroupTagDao {
         });
     }
 
-    private void checkInsertOrUpdateArgument(List<GroupTagModel> models) {
+    protected void checkInsertOrUpdateArgument(List<GroupTagModel> models) {
         ValueCheckers.notNullOrEmpty(models, "models");
         for (GroupTagModel model : models) {
             ValueCheckers.notNull(model, "groupTag");
             ValueCheckers.notNull(model.getGroupId(), "groupTag.groupId");
             ValueCheckers.notNullOrWhiteSpace(model.getTag(), "groupTag.tag");
             ValueCheckers.notNullOrWhiteSpace(model.getValue(), "groupTag.value");
+        }
+    }
+
+    // ========== Abstract Methods (database-specific) ==========
+
+    public abstract void insertOrUpdate(GroupTagModel... models);
+
+    public abstract void insertOrUpdate(List<GroupTagModel> models);
+
+    // ========== MySQL Implementation ==========
+
+    private static class MysqlGroupTagDao extends GroupTagDao {
+        @Override
+        public void insertOrUpdate(GroupTagModel... models) {
+            insertOrUpdate(Lists.newArrayList(models));
+        }
+
+        @Override
+        public void insertOrUpdate(final List<GroupTagModel> models) {
+            checkInsertOrUpdateArgument(models);
+            DataConfig.jdbcTemplate().batchUpdate(
+                "insert into service_group_tag (group_id, tag, value) values (?,?,?) on duplicate key update value = ?",
+                new BatchPreparedStatementSetter() {
+                    @Override
+                    public void setValues(PreparedStatement ps, int i) throws SQLException {
+                        GroupTagModel model = models.get(i);
+                        ps.setLong(1, model.getGroupId());
+                        ps.setString(2, model.getTag());
+                        ps.setString(3, model.getValue());
+                        ps.setString(4, model.getValue());
+                    }
+
+                    @Override
+                    public int getBatchSize() {
+                        return models.size();
+                    }
+                });
+        }
+    }
+
+    // ========== Generic Implementation (for SQLite and others) ==========
+
+    private static class GenericGroupTagDao extends GroupTagDao {
+        @Override
+        public void insertOrUpdate(GroupTagModel... models) {
+            insertOrUpdate(Lists.newArrayList(models));
+        }
+
+        @Override
+        public void insertOrUpdate(final List<GroupTagModel> models) {
+            checkInsertOrUpdateArgument(models);
+            for (GroupTagModel model : models) {
+                upsert(model);
+            }
+        }
+
+        /**
+         * Database-agnostic upsert: check if record exists, then insert or update
+         */
+        private void upsert(final GroupTagModel model) {
+            // Check if record exists
+            final String checkSql = "select id from service_group_tag where group_id=? and tag=?";
+            List<Long> existing = DataConfig.jdbcTemplate().query(new PreparedStatementCreator() {
+                @Override
+                public PreparedStatement createPreparedStatement(Connection conn) throws SQLException {
+                    PreparedStatement ps = conn.prepareStatement(checkSql);
+                    ps.setLong(1, model.getGroupId());
+                    ps.setString(2, model.getTag());
+                    return ps;
+                }
+            }, new RowMapper<Long>() {
+                @Override
+                public Long mapRow(ResultSet rs, int rowNum) throws SQLException {
+                    return rs.getLong(1);
+                }
+            });
+
+            if (existing.isEmpty()) {
+                // Insert new record
+                final String insertSql = "insert into service_group_tag (group_id, tag, value) values (?,?,?)";
+                DataConfig.jdbcTemplate().update(new PreparedStatementCreator() {
+                    @Override
+                    public PreparedStatement createPreparedStatement(Connection conn) throws SQLException {
+                        PreparedStatement ps = conn.prepareStatement(insertSql);
+                        ps.setLong(1, model.getGroupId());
+                        ps.setString(2, model.getTag());
+                        ps.setString(3, model.getValue());
+                        return ps;
+                    }
+                });
+            } else {
+                // Update existing record
+                final String updateSql = "update service_group_tag set value=? where id=?";
+                DataConfig.jdbcTemplate().update(new PreparedStatementCreator() {
+                    @Override
+                    public PreparedStatement createPreparedStatement(Connection conn) throws SQLException {
+                        PreparedStatement ps = conn.prepareStatement(updateSql);
+                        ps.setString(1, model.getValue());
+                        ps.setLong(2, existing.get(0));
+                        return ps;
+                    }
+                });
+            }
         }
     }
 }

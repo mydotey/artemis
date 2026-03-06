@@ -12,7 +12,7 @@ import java.util.List;
  * Created by fang_j on 10/07/2016.
  */
 public class RouteRuleGroupDaoTest extends ArtemisTest {
-    private final RouteRuleGroupDao routeRuleGroupDao = RouteRuleGroupDao.INSTANCE;
+    private final RouteRuleGroupDao routeRuleGroupDao = RouteRuleGroupDao.getInstance();
 
     @Test
     public void testInsertOrUpdate() {

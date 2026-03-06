@@ -20,20 +20,31 @@ import java.util.Set;
  * Created by fang_j on 10/07/2016.
  */
 public class BusinessDao {
-    public static final BusinessDao INSTANCE = new BusinessDao();
+    private static volatile BusinessDao INSTANCE;
 
-    private final RouteRuleDao routeRuleDao = RouteRuleDao.INSTANCE;
-    private final GroupDao groupDao = GroupDao.INSTANCE;
-    private final RouteRuleGroupDao routeRuleGroupDao = RouteRuleGroupDao.INSTANCE;
-    private final GroupOperationDao groupOperationDao = GroupOperationDao.INSTANCE;
-    private final GroupLogDao groupLogDao = GroupLogDao.INSTANCE;
-    private final GroupOperationLogDao groupOperationLogDao = GroupOperationLogDao.INSTANCE;
-    private final RouteRuleLogDao routeRuleLogDao = RouteRuleLogDao.INSTANCE;
-    private final RouteRuleGroupLogDao routeRuleGroupLogDao = RouteRuleGroupLogDao.INSTANCE;
-    private final GroupInstanceDao groupInstanceDao = GroupInstanceDao.INSTANCE;
-    private final GroupInstanceLogDao groupInstanceLogDao = GroupInstanceLogDao.INSTANCE;
-    private final ServiceInstanceDao serviceInstanceDao = ServiceInstanceDao.INSTANCE;
-    private final ServiceInstanceLogDao serviceInstanceLogDao = ServiceInstanceLogDao.INSTANCE;
+    public static BusinessDao getInstance() {
+        if (INSTANCE == null) {
+            synchronized (BusinessDao.class) {
+                if (INSTANCE == null) {
+                    INSTANCE = new BusinessDao();
+                }
+            }
+        }
+        return INSTANCE;
+    }
+
+    private final RouteRuleDao routeRuleDao = RouteRuleDao.getInstance();
+    private final GroupDao groupDao = GroupDao.getInstance();
+    private final RouteRuleGroupDao routeRuleGroupDao = RouteRuleGroupDao.getInstance();
+    private final GroupOperationDao groupOperationDao = GroupOperationDao.getInstance();
+    private final GroupLogDao groupLogDao = GroupLogDao.getInstance();
+    private final GroupOperationLogDao groupOperationLogDao = GroupOperationLogDao.getInstance();
+    private final RouteRuleLogDao routeRuleLogDao = RouteRuleLogDao.getInstance();
+    private final RouteRuleGroupLogDao routeRuleGroupLogDao = RouteRuleGroupLogDao.getInstance();
+    private final GroupInstanceDao groupInstanceDao = GroupInstanceDao.getInstance();
+    private final GroupInstanceLogDao groupInstanceLogDao = GroupInstanceLogDao.getInstance();
+    private final ServiceInstanceDao serviceInstanceDao = ServiceInstanceDao.getInstance();
+    private final ServiceInstanceLogDao serviceInstanceLogDao = ServiceInstanceLogDao.getInstance();
 
     @Transactional
     public void createServiceRouteRules(OperationContext operationContext, final String serviceId,

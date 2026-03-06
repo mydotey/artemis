@@ -27,9 +27,20 @@ import java.util.Set;
  * Created by fang_j on 10/07/2016.
  */
 public class RouteRuleGroupLogDao {
-    public static final RouteRuleGroupLogDao INSTANCE = new RouteRuleGroupLogDao();
+    private static volatile RouteRuleGroupLogDao INSTANCE;
 
     private RouteRuleGroupLogDao() {
+    }
+
+    public static RouteRuleGroupLogDao getInstance() {
+        if (INSTANCE == null) {
+            synchronized (RouteRuleGroupLogDao.class) {
+                if (INSTANCE == null) {
+                    INSTANCE = new RouteRuleGroupLogDao();
+                }
+            }
+        }
+        return INSTANCE;
     }
 
     public List<RouteRuleGroupLog> select(RouteRuleGroupLogModel filter) {

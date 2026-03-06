@@ -27,9 +27,20 @@ import java.util.Set;
  * Created by fang_j on 10/07/2016.
  */
 public class ServiceInstanceLogDao {
-    public static final ServiceInstanceLogDao INSTANCE = new ServiceInstanceLogDao();
+    private static volatile ServiceInstanceLogDao INSTANCE;
 
     private ServiceInstanceLogDao() {
+    }
+
+    public static ServiceInstanceLogDao getInstance() {
+        if (INSTANCE == null) {
+            synchronized (ServiceInstanceLogDao.class) {
+                if (INSTANCE == null) {
+                    INSTANCE = new ServiceInstanceLogDao();
+                }
+            }
+        }
+        return INSTANCE;
     }
 
     public List<ServiceInstanceLog> select(ServiceInstanceLogModel filter) {

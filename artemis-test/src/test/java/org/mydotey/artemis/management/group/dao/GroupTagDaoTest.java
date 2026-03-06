@@ -13,7 +13,7 @@ import java.util.List;
  * Created by fang_j on 10/07/2016.
  */
 public class GroupTagDaoTest extends ArtemisTest {
-    private final GroupTagDao groupTagDao = GroupTagDao.INSTANCE;
+    private final GroupTagDao groupTagDao = GroupTagDao.getInstance();
 
     @Test
     public void testQuery() throws Exception {

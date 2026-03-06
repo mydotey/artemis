@@ -15,13 +15,45 @@ import java.sql.*;
 import java.util.List;
 
 /**
- * Created by fang_j on 10/07/2016.
+ * Abstract GroupOperationDao with built-in factory method.
+ * <p>
+ * Use GroupOperationDao.getInstance() to get the appropriate implementation:
+ * - MySQL: MysqlGroupOperationDao (batch + INSERT IGNORE)
+ * - SQLite/Other: GenericGroupOperationDao (check-exists-then-insert)
+ * <p>
+ * Database type is determined from configuration, no DB connection needed.
  */
-public class GroupOperationDao {
-    public static final GroupOperationDao INSTANCE = new GroupOperationDao();
+public abstract class GroupOperationDao {
 
-    private GroupOperationDao() {
+    /**
+     * Holds the lazily-created singleton instance.
+     */
+    private static volatile GroupOperationDao instance;
+
+    /**
+     * Get the appropriate GroupOperationDao implementation based on configuration.
+     * Lazy initialization on first call.
+     */
+    public static GroupOperationDao getInstance() {
+        if (instance == null) {
+            synchronized (GroupOperationDao.class) {
+                if (instance == null) {
+                    if (DataConfig.isMySQL()) {
+                        instance = new MysqlGroupOperationDao();
+                    } else {
+                        instance = new GenericGroupOperationDao();
+                    }
+                }
+            }
+        }
+        return instance;
     }
+
+    
+
+    protected GroupOperationDao() {}
+
+    // ========== Common Methods (all implementations share these) ==========
 
     public List<GroupOperationModel> query() {
         return DataConfig.jdbcTemplate().query("select group_id, operation from service_group_operation",
@@ -58,29 +90,6 @@ public class GroupOperationDao {
             });
     }
 
-    protected void insertOrUpdate(GroupOperationModel... operationModels) {
-        insertOrUpdate(Lists.newArrayList(operationModels));
-    }
-
-    protected void insertOrUpdate(final List<GroupOperationModel> models) {
-        checkInsertOrUpdateArgument(models);
-        DataConfig.jdbcTemplate().batchUpdate(
-            "insert ignore into service_group_operation (group_id, operation) values (?,?)",
-            new BatchPreparedStatementSetter() {
-                @Override
-                public void setValues(PreparedStatement ps, int i) throws SQLException {
-                    GroupOperationModel groupOperation = models.get(i);
-                    ps.setLong(1, groupOperation.getGroupId());
-                    ps.setString(2, groupOperation.getOperation());
-                }
-
-                @Override
-                public int getBatchSize() {
-                    return models.size();
-                }
-            });
-    }
-
     protected List<GroupOperationModel> query(final String condition, final List<String> args) {
         final String sql = "SELECT id, group_id,operation,create_time,DataChange_LastTime from service_group_operation";
         return DataConfig.jdbcTemplate().query(new PreparedStatementCreator() {
@@ -112,12 +121,100 @@ public class GroupOperationDao {
         });
     }
 
-    private void checkInsertOrUpdateArgument(List<GroupOperationModel> models) {
+    protected void checkInsertOrUpdateArgument(List<GroupOperationModel> models) {
         ValueCheckers.notNullOrEmpty(models, "models");
         for (GroupOperationModel model : models) {
             ValueCheckers.notNull(model, "groupOperation");
             ValueCheckers.notNull(model.getGroupId(), "groupOperation.groupId");
             ValueCheckers.notNullOrWhiteSpace(model.getOperation(), "groupOperation.operation");
+        }
+    }
+
+    // ========== Abstract Methods (database-specific) ==========
+
+    protected abstract void insertOrUpdate(GroupOperationModel... operationModels);
+
+    protected abstract void insertOrUpdate(List<GroupOperationModel> models);
+
+    // ========== MySQL Implementation ==========
+
+    private static class MysqlGroupOperationDao extends GroupOperationDao {
+        @Override
+        protected void insertOrUpdate(GroupOperationModel... operationModels) {
+            insertOrUpdate(Lists.newArrayList(operationModels));
+        }
+
+        @Override
+        protected void insertOrUpdate(final List<GroupOperationModel> models) {
+            checkInsertOrUpdateArgument(models);
+            DataConfig.jdbcTemplate().batchUpdate(
+                "insert ignore into service_group_operation (group_id, operation) values (?,?)",
+                new BatchPreparedStatementSetter() {
+                    @Override
+                    public void setValues(PreparedStatement ps, int i) throws SQLException {
+                        GroupOperationModel groupOperation = models.get(i);
+                        ps.setLong(1, groupOperation.getGroupId());
+                        ps.setString(2, groupOperation.getOperation());
+                    }
+
+                    @Override
+                    public int getBatchSize() {
+                        return models.size();
+                    }
+                });
+        }
+    }
+
+    // ========== Generic Implementation (for SQLite and others) ==========
+
+    private static class GenericGroupOperationDao extends GroupOperationDao {
+        @Override
+        protected void insertOrUpdate(GroupOperationModel... operationModels) {
+            insertOrUpdate(Lists.newArrayList(operationModels));
+        }
+
+        @Override
+        protected void insertOrUpdate(final List<GroupOperationModel> models) {
+            checkInsertOrUpdateArgument(models);
+            for (GroupOperationModel model : models) {
+                insertIfNotExists(model);
+            }
+        }
+
+        /**
+         * Database-agnostic insert: only insert if record doesn't exist
+         */
+        private void insertIfNotExists(final GroupOperationModel model) {
+            // Check if record exists
+            final String checkSql = "select id from service_group_operation where group_id=? and operation=?";
+            List<Long> existing = DataConfig.jdbcTemplate().query(new PreparedStatementCreator() {
+                @Override
+                public PreparedStatement createPreparedStatement(Connection conn) throws SQLException {
+                    PreparedStatement ps = conn.prepareStatement(checkSql);
+                    ps.setLong(1, model.getGroupId());
+                    ps.setString(2, model.getOperation());
+                    return ps;
+                }
+            }, new RowMapper<Long>() {
+                @Override
+                public Long mapRow(ResultSet rs, int rowNum) throws SQLException {
+                    return rs.getLong(1);
+                }
+            });
+
+            if (existing.isEmpty()) {
+                // Insert new record only if not exists
+                final String insertSql = "insert into service_group_operation (group_id, operation) values (?,?)";
+                DataConfig.jdbcTemplate().update(new PreparedStatementCreator() {
+                    @Override
+                    public PreparedStatement createPreparedStatement(Connection conn) throws SQLException {
+                        PreparedStatement ps = conn.prepareStatement(insertSql);
+                        ps.setLong(1, model.getGroupId());
+                        ps.setString(2, model.getOperation());
+                        return ps;
+                    }
+                });
+            }
         }
     }
 }

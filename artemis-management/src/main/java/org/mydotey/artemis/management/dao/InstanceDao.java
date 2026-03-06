@@ -17,11 +17,38 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 
 /**
- * Created by fang_j on 10/07/2016.
+ * Abstract InstanceDao with built-in factory method.
+ * <p>
+ * Use InstanceDao.getInstance() to get the appropriate implementation:
+ * - MySQL: MysqlInstanceDao (batch + ON DUPLICATE KEY UPDATE)
+ * - SQLite/Other: GenericInstanceDao (check-exists-then-insert/update)
+ * <p>
+ * Database type is determined from configuration, no DB connection needed.
  */
-public class InstanceDao {
+public abstract class InstanceDao {
 
-    public static final InstanceDao INSTANCE = new InstanceDao();
+    private static volatile InstanceDao instance;
+
+    /**
+     * Get the appropriate InstanceDao implementation based on configuration.
+     * Lazy initialization on first call.
+     */
+    public static InstanceDao getInstance() {
+        if (instance == null) {
+            synchronized (InstanceDao.class) {
+                if (instance == null) {
+                    if (DataConfig.isMySQL()) {
+                        instance = new MysqlInstanceDao();
+                    } else {
+                        instance = new GenericInstanceDao();
+                    }
+                }
+            }
+        }
+        return instance;
+    }
+
+    
 
     private final String queryInstanceSql = "select distinct region_id, service_id, instance_id, operation from instance where region_id=? and service_id=? and instance_id=?";
 
@@ -41,7 +68,7 @@ public class InstanceDao {
         }
     };
 
-    private InstanceDao() {
+    protected InstanceDao() {
 
     }
 
@@ -216,31 +243,107 @@ public class InstanceDao {
         this.insert(Lists.newArrayList(instances));
     }
 
-    public void insert(final List<InstanceModel> instances) {
-        if (CollectionUtils.isEmpty(instances)) {
-            return;
-        }
-        DataConfig.jdbcTemplate().batchUpdate(
-            "insert into instance (region_id, service_id, instance_id, operation, operator_id, token) values (?,?,?,?,?,?)"
-                + " on duplicate key update operator_id=?, token=?",
-            new BatchPreparedStatementSetter() {
-                @Override
-                public int getBatchSize() {
-                    return instances.size();
-                }
+    public abstract void insert(List<InstanceModel> instances);
 
+    // ========== MySQL Implementation ==========
+
+    private static class MysqlInstanceDao extends InstanceDao {
+        @Override
+        public void insert(final List<InstanceModel> instances) {
+            if (CollectionUtils.isEmpty(instances)) {
+                return;
+            }
+            DataConfig.jdbcTemplate().batchUpdate(
+                "insert into instance (region_id, service_id, instance_id, operation, operator_id, token) values (?,?,?,?,?,?)"
+                    + " on duplicate key update operator_id=?, token=?",
+                new BatchPreparedStatementSetter() {
+                    @Override
+                    public int getBatchSize() {
+                        return instances.size();
+                    }
+
+                    @Override
+                    public void setValues(final PreparedStatement ps, final int index) throws SQLException {
+                        final InstanceModel instance = instances.get(index);
+                        ps.setString(1, instance.getRegionId());
+                        ps.setString(2, instance.getServiceId());
+                        ps.setString(3, instance.getInstanceId());
+                        ps.setString(4, instance.getOperation());
+                        ps.setString(5, instance.getOperatorId());
+                        ps.setString(6, instance.getToken());
+                        ps.setString(7, instance.getOperatorId());
+                        ps.setString(8, instance.getToken());
+                    }
+                });
+        }
+    }
+
+    // ========== Generic Implementation (for SQLite and others) ==========
+
+    private static class GenericInstanceDao extends InstanceDao {
+        @Override
+        public void insert(final List<InstanceModel> instances) {
+            if (CollectionUtils.isEmpty(instances)) {
+                return;
+            }
+            for (InstanceModel instance : instances) {
+                upsert(instance);
+            }
+        }
+
+        /**
+         * Database-agnostic upsert: check if record exists, then insert or update
+         */
+        private void upsert(final InstanceModel instance) {
+            // Check if record exists
+            final String checkSql = "select id, operator_id, token from instance where region_id=? and service_id=? and instance_id=? and operation=?";
+            List<Object[]> existing = DataConfig.jdbcTemplate().query(new PreparedStatementCreator() {
                 @Override
-                public void setValues(final PreparedStatement ps, final int index) throws SQLException {
-                    final InstanceModel instance = instances.get(index);
+                public PreparedStatement createPreparedStatement(Connection conn) throws SQLException {
+                    PreparedStatement ps = conn.prepareStatement(checkSql);
                     ps.setString(1, instance.getRegionId());
                     ps.setString(2, instance.getServiceId());
                     ps.setString(3, instance.getInstanceId());
                     ps.setString(4, instance.getOperation());
-                    ps.setString(5, instance.getOperatorId());
-                    ps.setString(6, instance.getToken());
-                    ps.setString(7, instance.getOperatorId());
-                    ps.setString(8, instance.getToken());
+                    return ps;
+                }
+            }, new RowMapper<Object[]>() {
+                @Override
+                public Object[] mapRow(ResultSet rs, int rowNum) throws SQLException {
+                    return new Object[]{rs.getLong(1), rs.getString(2), rs.getString(3)};
                 }
             });
+
+            if (existing.isEmpty()) {
+                // Insert new record
+                final String insertSql = "insert into instance (region_id, service_id, instance_id, operation, operator_id, token) values (?,?,?,?,?,?)";
+                DataConfig.jdbcTemplate().update(new PreparedStatementCreator() {
+                    @Override
+                    public PreparedStatement createPreparedStatement(Connection conn) throws SQLException {
+                        PreparedStatement ps = conn.prepareStatement(insertSql);
+                        ps.setString(1, instance.getRegionId());
+                        ps.setString(2, instance.getServiceId());
+                        ps.setString(3, instance.getInstanceId());
+                        ps.setString(4, instance.getOperation());
+                        ps.setString(5, instance.getOperatorId());
+                        ps.setString(6, instance.getToken());
+                        return ps;
+                    }
+                });
+            } else {
+                // Update existing record
+                final String updateSql = "update instance set operator_id=?, token=? where id=?";
+                DataConfig.jdbcTemplate().update(new PreparedStatementCreator() {
+                    @Override
+                    public PreparedStatement createPreparedStatement(Connection conn) throws SQLException {
+                        PreparedStatement ps = conn.prepareStatement(updateSql);
+                        ps.setString(1, instance.getOperatorId());
+                        ps.setString(2, instance.getToken());
+                        ps.setLong(3, (Long) existing.get(0)[0]);
+                        return ps;
+                    }
+                });
+            }
+        }
     }
 }

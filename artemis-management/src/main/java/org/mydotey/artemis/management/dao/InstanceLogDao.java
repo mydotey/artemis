@@ -26,9 +26,20 @@ import com.google.common.collect.Lists;
  * Created by fang_j on 10/07/2016.
  */
 public class InstanceLogDao {
-    public static final InstanceLogDao INSTANCE = new InstanceLogDao();
+    private static volatile InstanceLogDao INSTANCE;
 
     private InstanceLogDao() {
+    }
+
+    public static InstanceLogDao getInstance() {
+        if (INSTANCE == null) {
+            synchronized (InstanceLogDao.class) {
+                if (INSTANCE == null) {
+                    INSTANCE = new InstanceLogDao();
+                }
+            }
+        }
+        return INSTANCE;
     }
 
     public List<InstanceOperationLog> select(InstanceLogModel filter, Boolean complete) {

@@ -26,9 +26,20 @@ import com.google.common.collect.Lists;
  * Created by fang_j on 10/07/2016.
  */
 public class ServerLogDao {
-    public static final ServerLogDao INSTANCE = new ServerLogDao();
+    private static volatile ServerLogDao INSTANCE;
 
     private ServerLogDao() {
+    }
+
+    public static ServerLogDao getInstance() {
+        if (INSTANCE == null) {
+            synchronized (ServerLogDao.class) {
+                if (INSTANCE == null) {
+                    INSTANCE = new ServerLogDao();
+                }
+            }
+        }
+        return INSTANCE;
     }
 
     public List<ServerOperationLog> select(ServerLogModel filter, Boolean complete) {

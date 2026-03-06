@@ -13,7 +13,7 @@ import java.util.List;
  * Created by fang_j on 10/07/2016.
  */
 public class ZoneOperationDaoTest extends ArtemisTest {
-    ZoneOperationDao zoneOperationDao = ZoneOperationDao.INSTANCE;
+    ZoneOperationDao zoneOperationDao = ZoneOperationDao.getInstance();
 
     @Test
     public void testInsertOrUpdate() {

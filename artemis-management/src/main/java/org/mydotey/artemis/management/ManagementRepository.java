@@ -90,10 +90,10 @@ public class ManagementRepository {
     private Property<String, Integer> _managementDBSyncWaitTimeProperty = ArtemisConfig.properties().getIntProperty(
         "artemis.management.db-sync.wait-time", 2 * 1000, new RangeValueFilter<>(0, 60 * 1000));
 
-    private InstanceDao _instanceDao = InstanceDao.INSTANCE;
-    private ServerDao _serverDao = ServerDao.INSTANCE;
-    private InstanceLogDao _instanceLogDao = InstanceLogDao.INSTANCE;
-    private ServerLogDao _serverLogDao = ServerLogDao.INSTANCE;
+    private InstanceDao _instanceDao = InstanceDao.getInstance();
+    private ServerDao _serverDao = ServerDao.getInstance();
+    private InstanceLogDao _instanceLogDao = InstanceLogDao.getInstance();
+    private ServerLogDao _serverLogDao = ServerLogDao.getInstance();
 
     private RegistryRepository _registryRepository = RegistryRepository.getInstance();
     private GroupRepository groupRepository = GroupRepository.getInstance();

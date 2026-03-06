@@ -13,7 +13,7 @@ import java.util.List;
  * Created by fang_j on 10/07/2016.
  */
 public class GroupDaoTest extends ArtemisTest {
-    private final GroupDao groupDao = GroupDao.INSTANCE;
+    private final GroupDao groupDao = GroupDao.getInstance();
 
     @Test
     public void testGenerateGroup() {

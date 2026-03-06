@@ -14,7 +14,7 @@ import java.util.List;
  * Created by fang_j on 10/07/2016.
  */
 public class ServiceInstanceLogDaoTest extends ArtemisTest {
-    private ServiceInstanceLogDao serviceInstanceLogDao = ServiceInstanceLogDao.INSTANCE;
+    private ServiceInstanceLogDao serviceInstanceLogDao = ServiceInstanceLogDao.getInstance();
 
     @Test
     public void testInsert() {

@@ -14,7 +14,7 @@ import java.util.List;
  * Created by fang_j on 10/07/2016.
  */
 public class RouteRuleLogDaoTest extends ArtemisTest {
-    private RouteRuleLogDao routeRuleLogDao = RouteRuleLogDao.INSTANCE;
+    private RouteRuleLogDao routeRuleLogDao = RouteRuleLogDao.getInstance();
 
     @Test
     public void testInsert() {

@@ -14,7 +14,7 @@ import java.util.List;
  * Created by fang_j on 10/07/2016.
  */
 public class GroupLogDaoTest extends ArtemisTest {
-    private GroupLogDao groupLogDao = GroupLogDao.INSTANCE;
+    private GroupLogDao groupLogDao = GroupLogDao.getInstance();
 
     @Test
     public void testInsert() {

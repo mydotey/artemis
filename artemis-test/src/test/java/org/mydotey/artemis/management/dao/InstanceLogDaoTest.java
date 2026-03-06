@@ -13,7 +13,7 @@ import com.google.common.collect.Lists;
  * Created by fang_j on 10/07/2016.
  */
 public class InstanceLogDaoTest extends ArtemisTest {
-    InstanceLogDao _instanceLogDao = InstanceLogDao.INSTANCE;
+    InstanceLogDao _instanceLogDao = InstanceLogDao.getInstance();
 
     @Test
     public void testInsert() {

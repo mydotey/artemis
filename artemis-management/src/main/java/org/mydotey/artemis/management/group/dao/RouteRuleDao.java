@@ -23,10 +23,45 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Created by fang_j on 10/07/2016.
+ * Abstract RouteRuleDao with built-in factory method.
+ * <p>
+ * Use RouteRuleDao.getInstance() to get the appropriate implementation:
+ * - MySQL: MysqlRouteRuleDao (batch + ON DUPLICATE KEY UPDATE)
+ * - SQLite/Other: GenericRouteRuleDao (check-exists-then-insert/update)
+ * <p>
+ * Database type is determined from configuration, no DB connection needed.
  */
-public class RouteRuleDao {
-    public static final RouteRuleDao INSTANCE = new RouteRuleDao();
+public abstract class RouteRuleDao {
+
+    /**
+     * Holds the lazily-created singleton instance.
+     */
+    private static volatile RouteRuleDao instance;
+
+    /**
+     * Get the appropriate RouteRuleDao implementation based on configuration.
+     * Lazy initialization on first call.
+     */
+    public static RouteRuleDao getInstance() {
+        if (instance == null) {
+            synchronized (RouteRuleDao.class) {
+                if (instance == null) {
+                    if (DataConfig.isMySQL()) {
+                        instance = new MysqlRouteRuleDao();
+                    } else {
+                        instance = new GenericRouteRuleDao();
+                    }
+                }
+            }
+        }
+        return instance;
+    }
+
+    
+
+    protected RouteRuleDao() {}
+
+    // ========== Common Methods (all implementations share these) ==========
 
     public List<RouteRuleModel> query() {
         final String sql = "SELECT id, service_id, name, description, status, strategy from service_route_rule where deleted = false";
@@ -87,59 +122,13 @@ public class RouteRuleDao {
         insertOrUpdate(Lists.newArrayList(models));
     }
 
-    protected void insertOrUpdate(final List<RouteRuleModel> models) {
-        checkInsertOrUpdateArgument(models);
-        DataConfig.jdbcTemplate().batchUpdate(
-            "insert into service_route_rule (service_id, name, description, status, strategy) values (?,?,?,?,?)"
-                + " on duplicate key update description=?, status=?, strategy=?, deleted=false",
-            new BatchPreparedStatementSetter() {
-
-                @Override
-                public void setValues(PreparedStatement ps, int i) throws SQLException {
-                    RouteRuleModel model = models.get(i);
-                    Object[] params = new Object[] { model.getServiceId(), model.getName(), model.getDescription(),
-                        model.getStatus(), model.getStrategy(),
-                        model.getDescription(), model.getStatus(), model.getStrategy() };
-
-                    for (int index = 0; index < params.length; index++) {
-                        ps.setObject(index + 1, params[index]);
-                    }
-                }
-
-                @Override
-                public int getBatchSize() {
-                    return models.size();
-                }
-            });
-    }
+    protected abstract void insertOrUpdate(List<RouteRuleModel> models);
 
     protected void insert(RouteRuleModel... models) {
         insert(Lists.newArrayList(models));
     }
 
-    protected void insert(final List<RouteRuleModel> models) {
-        checkInsertOrUpdateArgument(models);
-        DataConfig.jdbcTemplate().batchUpdate(
-            "insert into service_route_rule (service_id, name, description, status, strategy) values (?,?,?,?,?)"
-                + " on duplicate key update deleted=false",
-            new BatchPreparedStatementSetter() {
-
-                @Override
-                public void setValues(PreparedStatement ps, int i) throws SQLException {
-                    RouteRuleModel model = models.get(i);
-                    ps.setString(1, model.getServiceId());
-                    ps.setString(2, model.getName());
-                    ps.setString(3, model.getDescription());
-                    ps.setString(4, model.getStatus());
-                    ps.setString(5, model.getStrategy());
-                }
-
-                @Override
-                public int getBatchSize() {
-                    return models.size();
-                }
-            });
-    }
+    protected abstract void insert(List<RouteRuleModel> models);
 
     public List<RouteRuleModel> select(RouteRuleModel filter) {
         ValueCheckers.notNull(filter, "filter");
@@ -204,18 +193,186 @@ public class RouteRuleDao {
         });
     }
 
-    protected void checkInsertOrUpdateArgument(List<RouteRuleModel> models) {
+    private static void checkInsertOrUpdateArgument(List<RouteRuleModel> models) {
         ValueCheckers.notNullOrEmpty(models, "models");
         for (RouteRuleModel model : models) {
             checkInsertOrUpdateArgument(model);
         }
     }
 
-    protected void checkInsertOrUpdateArgument(RouteRuleModel model) {
+    private static void checkInsertOrUpdateArgument(RouteRuleModel model) {
         ValueCheckers.notNull(model, "routeRule");
         ValueCheckers.notNullOrWhiteSpace(model.getServiceId(), "routeRule.serviceId");
         ValueCheckers.notNullOrWhiteSpace(model.getName(), "routeRule.name");
         ValueCheckers.notNullOrWhiteSpace(model.getStatus(), "routeRule.status");
         ValueCheckers.notNullOrWhiteSpace(model.getStrategy(), "routeRule.strategy");
+    }
+
+    // ========== MySQL Implementation ==========
+
+    private static class MysqlRouteRuleDao extends RouteRuleDao {
+        @Override
+        protected void insertOrUpdate(final List<RouteRuleModel> models) {
+            checkInsertOrUpdateArgument(models);
+            DataConfig.jdbcTemplate().batchUpdate(
+                "insert into service_route_rule (service_id, name, description, status, strategy) values (?,?,?,?,?)"
+                    + " on duplicate key update description=?, status=?, strategy=?, deleted=false",
+                new BatchPreparedStatementSetter() {
+
+                    @Override
+                    public void setValues(PreparedStatement ps, int i) throws SQLException {
+                        RouteRuleModel model = models.get(i);
+                        Object[] params = new Object[] { model.getServiceId(), model.getName(), model.getDescription(),
+                            model.getStatus(), model.getStrategy(),
+                            model.getDescription(), model.getStatus(), model.getStrategy() };
+
+                        for (int index = 0; index < params.length; index++) {
+                            ps.setObject(index + 1, params[index]);
+                        }
+                    }
+
+                    @Override
+                    public int getBatchSize() {
+                        return models.size();
+                    }
+                });
+        }
+
+        @Override
+        protected void insert(final List<RouteRuleModel> models) {
+            checkInsertOrUpdateArgument(models);
+            DataConfig.jdbcTemplate().batchUpdate(
+                "insert into service_route_rule (service_id, name, description, status, strategy) values (?,?,?,?,?)"
+                    + " on duplicate key update deleted=false",
+                new BatchPreparedStatementSetter() {
+
+                    @Override
+                    public void setValues(PreparedStatement ps, int i) throws SQLException {
+                        RouteRuleModel model = models.get(i);
+                        ps.setString(1, model.getServiceId());
+                        ps.setString(2, model.getName());
+                        ps.setString(3, model.getDescription());
+                        ps.setString(4, model.getStatus());
+                        ps.setString(5, model.getStrategy());
+                    }
+
+                    @Override
+                    public int getBatchSize() {
+                        return models.size();
+                    }
+                });
+        }
+    }
+
+    // ========== Generic Implementation (for SQLite and others) ==========
+
+    private static class GenericRouteRuleDao extends RouteRuleDao {
+        @Override
+        protected void insertOrUpdate(final List<RouteRuleModel> models) {
+            checkInsertOrUpdateArgument(models);
+            for (RouteRuleModel model : models) {
+                upsert(model);
+            }
+        }
+
+        @Override
+        protected void insert(final List<RouteRuleModel> models) {
+            checkInsertOrUpdateArgument(models);
+            for (RouteRuleModel model : models) {
+                insertIfNotExists(model);
+            }
+        }
+
+        /**
+         * Database-agnostic upsert: check if record exists, then insert or update
+         */
+        private void upsert(final RouteRuleModel model) {
+            // Check if record exists
+            final String checkSql = "select id, description, status, strategy from service_route_rule where service_id=? and name=?";
+            List<Object[]> existing = DataConfig.jdbcTemplate().query(new PreparedStatementCreator() {
+                @Override
+                public PreparedStatement createPreparedStatement(Connection conn) throws SQLException {
+                    PreparedStatement ps = conn.prepareStatement(checkSql);
+                    ps.setString(1, model.getServiceId());
+                    ps.setString(2, model.getName());
+                    return ps;
+                }
+            }, new RowMapper<Object[]>() {
+                @Override
+                public Object[] mapRow(ResultSet rs, int rowNum) throws SQLException {
+                    return new Object[]{rs.getLong(1), rs.getString(2), rs.getString(3), rs.getString(4)};
+                }
+            });
+
+            if (existing.isEmpty()) {
+                // Insert new record
+                final String insertSql = "insert into service_route_rule (service_id, name, description, status, strategy) values (?,?,?,?,?)";
+                DataConfig.jdbcTemplate().update(new PreparedStatementCreator() {
+                    @Override
+                    public PreparedStatement createPreparedStatement(Connection conn) throws SQLException {
+                        PreparedStatement ps = conn.prepareStatement(insertSql);
+                        ps.setString(1, model.getServiceId());
+                        ps.setString(2, model.getName());
+                        ps.setString(3, model.getDescription());
+                        ps.setString(4, model.getStatus());
+                        ps.setString(5, model.getStrategy());
+                        return ps;
+                    }
+                });
+            } else {
+                // Update existing record
+                final String updateSql = "update service_route_rule set description=?, status=?, strategy=?, deleted=false where id=?";
+                DataConfig.jdbcTemplate().update(new PreparedStatementCreator() {
+                    @Override
+                    public PreparedStatement createPreparedStatement(Connection conn) throws SQLException {
+                        PreparedStatement ps = conn.prepareStatement(updateSql);
+                        ps.setString(1, model.getDescription());
+                        ps.setString(2, model.getStatus());
+                        ps.setString(3, model.getStrategy());
+                        ps.setLong(4, (Long) existing.get(0)[0]);
+                        return ps;
+                    }
+                });
+            }
+        }
+
+        /**
+         * Database-agnostic insert: only insert if record doesn't exist
+         */
+        private void insertIfNotExists(final RouteRuleModel model) {
+            // Check if record exists
+            final String checkSql = "select id from service_route_rule where service_id=? and name=?";
+            List<Long> existing = DataConfig.jdbcTemplate().query(new PreparedStatementCreator() {
+                @Override
+                public PreparedStatement createPreparedStatement(Connection conn) throws SQLException {
+                    PreparedStatement ps = conn.prepareStatement(checkSql);
+                    ps.setString(1, model.getServiceId());
+                    ps.setString(2, model.getName());
+                    return ps;
+                }
+            }, new RowMapper<Long>() {
+                @Override
+                public Long mapRow(ResultSet rs, int rowNum) throws SQLException {
+                    return rs.getLong(1);
+                }
+            });
+
+            if (existing.isEmpty()) {
+                // Insert new record only if not exists
+                final String insertSql = "insert into service_route_rule (service_id, name, description, status, strategy) values (?,?,?,?,?)";
+                DataConfig.jdbcTemplate().update(new PreparedStatementCreator() {
+                    @Override
+                    public PreparedStatement createPreparedStatement(Connection conn) throws SQLException {
+                        PreparedStatement ps = conn.prepareStatement(insertSql);
+                        ps.setString(1, model.getServiceId());
+                        ps.setString(2, model.getName());
+                        ps.setString(3, model.getDescription());
+                        ps.setString(4, model.getStatus());
+                        ps.setString(5, model.getStrategy());
+                        return ps;
+                    }
+                });
+            }
+        }
     }
 }

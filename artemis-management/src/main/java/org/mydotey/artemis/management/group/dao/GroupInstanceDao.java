@@ -23,13 +23,45 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Created by fang_j on 10/07/2016.
+ * Abstract GroupInstanceDao with built-in factory method.
+ * <p>
+ * Use GroupInstanceDao.getInstance() to get the appropriate implementation:
+ * - MySQL: MysqlGroupInstanceDao (batch + INSERT IGNORE)
+ * - SQLite/Other: GenericGroupInstanceDao (check-exists-then-insert)
+ * <p>
+ * Database type is determined from configuration, no DB connection needed.
  */
-public class GroupInstanceDao {
-    public static final GroupInstanceDao INSTANCE = new GroupInstanceDao();
+public abstract class GroupInstanceDao {
 
-    private GroupInstanceDao() {
+    /**
+     * Holds the lazily-created singleton instance.
+     */
+    private static volatile GroupInstanceDao instance;
+
+    /**
+     * Get the appropriate GroupInstanceDao implementation based on configuration.
+     * Lazy initialization on first call.
+     */
+    public static GroupInstanceDao getInstance() {
+        if (instance == null) {
+            synchronized (GroupInstanceDao.class) {
+                if (instance == null) {
+                    if (DataConfig.isMySQL()) {
+                        instance = new MysqlGroupInstanceDao();
+                    } else {
+                        instance = new GenericGroupInstanceDao();
+                    }
+                }
+            }
+        }
+        return instance;
     }
+
+    
+
+    protected GroupInstanceDao() {}
+
+    // ========== Common Methods (all implementations share these) ==========
 
     public List<GroupInstanceModel> query() {
         final String sql = "SELECT id, group_id, instance_id from service_group_instance";
@@ -84,29 +116,6 @@ public class GroupInstanceDao {
                     final GroupInstanceModel filter = filters.get(i);
                     ps.setLong(1, filter.getGroupId());
                     ps.setString(2, filter.getInstanceId());
-                }
-            });
-    }
-
-    protected void insert(final GroupInstanceModel... groupInstances) {
-        insert(Lists.newArrayList(groupInstances));
-    }
-
-    protected void insert(final List<GroupInstanceModel> models) {
-        checkInsertOrUpdateArgument(models);
-        DataConfig.jdbcTemplate().batchUpdate(
-            "insert ignore into service_group_instance (group_id, instance_id) values (?,?)",
-            new BatchPreparedStatementSetter() {
-                @Override
-                public void setValues(PreparedStatement ps, int i) throws SQLException {
-                    GroupInstanceModel model = models.get(i);
-                    ps.setLong(1, model.getGroupId());
-                    ps.setString(2, model.getInstanceId());
-                }
-
-                @Override
-                public int getBatchSize() {
-                    return models.size();
                 }
             });
     }
@@ -176,6 +185,94 @@ public class GroupInstanceDao {
             ValueCheckers.notNull(model, "groupInstance");
             ValueCheckers.notNull(model.getGroupId(), "groupInstance.groupId");
             ValueCheckers.notNullOrWhiteSpace(model.getInstanceId(), "groupInstance.instanceId");
+        }
+    }
+
+    // ========== Abstract Methods (database-specific) ==========
+
+    protected abstract void insert(GroupInstanceModel... groupInstances);
+
+    protected abstract void insert(List<GroupInstanceModel> models);
+
+    // ========== MySQL Implementation ==========
+
+    private static class MysqlGroupInstanceDao extends GroupInstanceDao {
+        @Override
+        protected void insert(GroupInstanceModel... groupInstances) {
+            insert(Lists.newArrayList(groupInstances));
+        }
+
+        @Override
+        protected void insert(final List<GroupInstanceModel> models) {
+            checkInsertOrUpdateArgument(models);
+            DataConfig.jdbcTemplate().batchUpdate(
+                "insert ignore into service_group_instance (group_id, instance_id) values (?,?)",
+                new BatchPreparedStatementSetter() {
+                    @Override
+                    public void setValues(PreparedStatement ps, int i) throws SQLException {
+                        GroupInstanceModel model = models.get(i);
+                        ps.setLong(1, model.getGroupId());
+                        ps.setString(2, model.getInstanceId());
+                    }
+
+                    @Override
+                    public int getBatchSize() {
+                        return models.size();
+                    }
+                });
+        }
+    }
+
+    // ========== Generic Implementation (for SQLite and others) ==========
+
+    private static class GenericGroupInstanceDao extends GroupInstanceDao {
+        @Override
+        protected void insert(GroupInstanceModel... groupInstances) {
+            insert(Lists.newArrayList(groupInstances));
+        }
+
+        @Override
+        protected void insert(final List<GroupInstanceModel> models) {
+            checkInsertOrUpdateArgument(models);
+            for (GroupInstanceModel model : models) {
+                insertIfNotExists(model);
+            }
+        }
+
+        /**
+         * Database-agnostic insert: only insert if record doesn't exist
+         */
+        private void insertIfNotExists(final GroupInstanceModel model) {
+            // Check if record exists
+            final String checkSql = "select id from service_group_instance where group_id=? and instance_id=?";
+            List<Long> existing = DataConfig.jdbcTemplate().query(new PreparedStatementCreator() {
+                @Override
+                public PreparedStatement createPreparedStatement(Connection conn) throws SQLException {
+                    PreparedStatement ps = conn.prepareStatement(checkSql);
+                    ps.setLong(1, model.getGroupId());
+                    ps.setString(2, model.getInstanceId());
+                    return ps;
+                }
+            }, new RowMapper<Long>() {
+                @Override
+                public Long mapRow(ResultSet rs, int rowNum) throws SQLException {
+                    return rs.getLong(1);
+                }
+            });
+
+            if (existing.isEmpty()) {
+                // Insert new record only if not exists
+                final String insertSql = "insert into service_group_instance (group_id, instance_id) values (?,?)";
+                DataConfig.jdbcTemplate().update(new PreparedStatementCreator() {
+                    @Override
+                    public PreparedStatement createPreparedStatement(Connection conn) throws SQLException {
+                        PreparedStatement ps = conn.prepareStatement(insertSql);
+                        ps.setLong(1, model.getGroupId());
+                        ps.setString(2, model.getInstanceId());
+                        return ps;
+                    }
+                });
+            }
         }
     }
 }

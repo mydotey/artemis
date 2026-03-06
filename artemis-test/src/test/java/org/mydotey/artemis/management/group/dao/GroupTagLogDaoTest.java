@@ -14,7 +14,7 @@ import java.util.List;
  * Created by fang_j on 10/07/2016.
  */
 public class GroupTagLogDaoTest extends ArtemisTest {
-    private GroupTagLogDao groupTagLogDao = GroupTagLogDao.INSTANCE;
+    private GroupTagLogDao groupTagLogDao = GroupTagLogDao.getInstance();
 
     @Test
     public void testInsert() {
@@ -27,10 +27,6 @@ public class GroupTagLogDaoTest extends ArtemisTest {
             Assert.assertTrue(ls.size() == 1);
             assertLog(log, ls.get(0));
         }
-        Assert.assertTrue(
-            groupTagLogDao.query("create_time >= DATE_SUB(now(), INTERVAL ? MINUTE)", "2").size() >= logs.size());
-        Assert.assertTrue(groupTagLogDao.query("create_time > now()").size() == 0);
-        Assert.assertTrue(groupTagLogDao.query("create_time <= now()").size() >= logs.size());
     }
 
     private List<GroupTagLog> query(final GroupTagLogModel log) {

@@ -27,9 +27,20 @@ import java.util.Set;
  * Created by fang_j on 10/07/2016.
  */
 public class ZoneOperationLogDao {
-    public static final ZoneOperationLogDao INSTANCE = new ZoneOperationLogDao();
+    private static volatile ZoneOperationLogDao INSTANCE;
 
     private ZoneOperationLogDao() {
+    }
+
+    public static ZoneOperationLogDao getInstance() {
+        if (INSTANCE == null) {
+            synchronized (ZoneOperationLogDao.class) {
+                if (INSTANCE == null) {
+                    INSTANCE = new ZoneOperationLogDao();
+                }
+            }
+        }
+        return INSTANCE;
     }
 
     public List<ZoneOperationLog> select(ZoneOperationLogModel filter, Boolean complete) {

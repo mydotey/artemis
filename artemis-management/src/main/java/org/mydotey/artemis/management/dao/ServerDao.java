@@ -17,11 +17,38 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 
 /**
- * Created by fang_j on 10/07/2016.
+ * Abstract ServerDao with built-in factory method.
+ * <p>
+ * Use ServerDao.getInstance() to get the appropriate implementation:
+ * - MySQL: MysqlServerDao (batch + ON DUPLICATE KEY UPDATE)
+ * - SQLite/Other: GenericServerDao (check-exists-then-insert/update)
+ * <p>
+ * Database type is determined from configuration, no DB connection needed.
  */
-public class ServerDao {
+public abstract class ServerDao {
 
-    public static final ServerDao INSTANCE = new ServerDao();
+    private static volatile ServerDao instance;
+
+    /**
+     * Get the appropriate ServerDao implementation based on configuration.
+     * Lazy initialization on first call.
+     */
+    public static ServerDao getInstance() {
+        if (instance == null) {
+            synchronized (ServerDao.class) {
+                if (instance == null) {
+                    if (DataConfig.isMySQL()) {
+                        instance = new MysqlServerDao();
+                    } else {
+                        instance = new GenericServerDao();
+                    }
+                }
+            }
+        }
+        return instance;
+    }
+
+    
 
     private final String queryServerSql = "select distinct region_Id, server_id, operation from server where region_id=? and server_id=?";
 
@@ -40,7 +67,7 @@ public class ServerDao {
         }
     };
 
-    private ServerDao() {
+    protected ServerDao() {
 
     }
 
@@ -179,30 +206,104 @@ public class ServerDao {
         this.insert(Lists.newArrayList(servers));
     }
 
-    public void insert(final List<ServerModel> serverList) {
-        if (CollectionUtils.isEmpty(serverList)) {
-            return;
-        }
-        DataConfig.jdbcTemplate()
-            .batchUpdate("insert into server (region_id, server_id, operation, operator_id, token) values (?,?,?,?,?)"
-                + " on duplicate key update operator_id=?, token=?", new BatchPreparedStatementSetter() {
-                    @Override
-                    public int getBatchSize() {
-                        return serverList.size();
-                    }
+    public abstract void insert(List<ServerModel> serverList);
 
+    // ========== MySQL Implementation ==========
+
+    private static class MysqlServerDao extends ServerDao {
+        @Override
+        public void insert(final List<ServerModel> serverList) {
+            if (CollectionUtils.isEmpty(serverList)) {
+                return;
+            }
+            DataConfig.jdbcTemplate()
+                .batchUpdate("insert into server (region_id, server_id, operation, operator_id, token) values (?,?,?,?,?)"
+                    + " on duplicate key update operator_id=?, token=?", new BatchPreparedStatementSetter() {
+                        @Override
+                        public int getBatchSize() {
+                            return serverList.size();
+                        }
+
+                        @Override
+                        public void setValues(final PreparedStatement ps, final int index) throws SQLException {
+                            final ServerModel server = serverList.get(index);
+                            ps.setString(1, server.getRegionId());
+                            ps.setString(2, server.getServerId());
+                            ps.setString(3, server.getOperation());
+                            ps.setString(4, server.getOperatorId());
+                            ps.setString(5, server.getToken());
+
+                            ps.setString(6, server.getOperatorId());
+                            ps.setString(7, server.getToken());
+                        }
+                    });
+        }
+    }
+
+    // ========== Generic Implementation (for SQLite and others) ==========
+
+    private static class GenericServerDao extends ServerDao {
+        @Override
+        public void insert(final List<ServerModel> serverList) {
+            if (CollectionUtils.isEmpty(serverList)) {
+                return;
+            }
+            for (ServerModel server : serverList) {
+                upsert(server);
+            }
+        }
+
+        /**
+         * Database-agnostic upsert: check if record exists, then insert or update
+         */
+        private void upsert(final ServerModel server) {
+            // Check if record exists
+            final String checkSql = "select id, operator_id, token from server where region_id=? and server_id=? and operation=?";
+            List<Object[]> existing = DataConfig.jdbcTemplate().query(new PreparedStatementCreator() {
+                @Override
+                public PreparedStatement createPreparedStatement(Connection conn) throws SQLException {
+                    PreparedStatement ps = conn.prepareStatement(checkSql);
+                    ps.setString(1, server.getRegionId());
+                    ps.setString(2, server.getServerId());
+                    ps.setString(3, server.getOperation());
+                    return ps;
+                }
+            }, new RowMapper<Object[]>() {
+                @Override
+                public Object[] mapRow(ResultSet rs, int rowNum) throws SQLException {
+                    return new Object[]{rs.getLong(1), rs.getString(2), rs.getString(3)};
+                }
+            });
+
+            if (existing.isEmpty()) {
+                // Insert new record
+                final String insertSql = "insert into server (region_id, server_id, operation, operator_id, token) values (?,?,?,?,?)";
+                DataConfig.jdbcTemplate().update(new PreparedStatementCreator() {
                     @Override
-                    public void setValues(final PreparedStatement ps, final int index) throws SQLException {
-                        final ServerModel server = serverList.get(index);
+                    public PreparedStatement createPreparedStatement(Connection conn) throws SQLException {
+                        PreparedStatement ps = conn.prepareStatement(insertSql);
                         ps.setString(1, server.getRegionId());
                         ps.setString(2, server.getServerId());
                         ps.setString(3, server.getOperation());
                         ps.setString(4, server.getOperatorId());
                         ps.setString(5, server.getToken());
-
-                        ps.setString(6, server.getOperatorId());
-                        ps.setString(7, server.getToken());
+                        return ps;
                     }
                 });
+            } else {
+                // Update existing record
+                final String updateSql = "update server set operator_id=?, token=? where id=?";
+                DataConfig.jdbcTemplate().update(new PreparedStatementCreator() {
+                    @Override
+                    public PreparedStatement createPreparedStatement(Connection conn) throws SQLException {
+                        PreparedStatement ps = conn.prepareStatement(updateSql);
+                        ps.setString(1, server.getOperatorId());
+                        ps.setString(2, server.getToken());
+                        ps.setLong(3, (Long) existing.get(0)[0]);
+                        return ps;
+                    }
+                });
+            }
+        }
     }
 }

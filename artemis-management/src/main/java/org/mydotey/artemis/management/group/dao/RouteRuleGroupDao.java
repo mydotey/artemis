@@ -23,10 +23,45 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Created by fang_j on 10/07/2016.
+ * Abstract RouteRuleGroupDao with built-in factory method.
+ * <p>
+ * Use RouteRuleGroupDao.getInstance() to get the appropriate implementation:
+ * - MySQL: MysqlRouteRuleGroupDao (batch + ON DUPLICATE KEY UPDATE + INSERT IGNORE)
+ * - SQLite/Other: GenericRouteRuleGroupDao (check-exists-then-insert/update)
+ * <p>
+ * Database type is determined from configuration, no DB connection needed.
  */
-public class RouteRuleGroupDao {
-    public static final RouteRuleGroupDao INSTANCE = new RouteRuleGroupDao();
+public abstract class RouteRuleGroupDao {
+
+    /**
+     * Holds the lazily-created singleton instance.
+     */
+    private static volatile RouteRuleGroupDao instance;
+
+    /**
+     * Get the appropriate RouteRuleGroupDao implementation based on configuration.
+     * Lazy initialization on first call.
+     */
+    public static RouteRuleGroupDao getInstance() {
+        if (instance == null) {
+            synchronized (RouteRuleGroupDao.class) {
+                if (instance == null) {
+                    if (DataConfig.isMySQL()) {
+                        instance = new MysqlRouteRuleGroupDao();
+                    } else {
+                        instance = new GenericRouteRuleGroupDao();
+                    }
+                }
+            }
+        }
+        return instance;
+    }
+
+    
+
+    protected RouteRuleGroupDao() {}
+
+    // ========== Common Methods (all implementations share these) ==========
 
     public List<RouteRuleGroupModel> query() {
         final String sql = "SELECT id, route_rule_id, group_id, weight, unreleased_weight from service_route_rule_group";
@@ -84,67 +119,6 @@ public class RouteRuleGroupDao {
             });
     }
 
-    protected void insertOrUpdate(final RouteRuleGroupModel... models) {
-        insertOrUpdate(Lists.newArrayList(models));
-    }
-
-    protected void insertOrUpdate(final List<RouteRuleGroupModel> models) {
-        checkInsertOrUpdateArgument(models);
-        DataConfig.jdbcTemplate().batchUpdate(
-            "insert into service_route_rule_group (route_rule_id, group_id, unreleased_weight) values (?,?,?)"
-                + " on duplicate key update unreleased_weight=?",
-            new BatchPreparedStatementSetter() {
-                @Override
-                public void setValues(PreparedStatement ps, int i) throws SQLException {
-                    RouteRuleGroupModel model = models.get(i);
-                    ps.setLong(1, model.getRouteRuleId());
-                    ps.setLong(2, model.getGroupId());
-                    Integer unreleasedWeight = model.getUnreleasedWeight();
-                    if (unreleasedWeight == null) {
-                        ps.setString(3, null);
-                        ps.setString(4, null);
-                    } else {
-                        ps.setInt(3, unreleasedWeight);
-                        ps.setInt(4, unreleasedWeight);
-                    }
-                }
-
-                @Override
-                public int getBatchSize() {
-                    return models.size();
-                }
-            });
-    }
-
-    protected void insert(final RouteRuleGroupModel... models) {
-        insert(Lists.newArrayList(models));
-    }
-
-    protected void insert(final List<RouteRuleGroupModel> models) {
-        checkInsertOrUpdateArgument(models);
-        DataConfig.jdbcTemplate().batchUpdate(
-            "insert ignore into service_route_rule_group (route_rule_id, group_id, unreleased_weight) values (?,?,?)",
-            new BatchPreparedStatementSetter() {
-                @Override
-                public void setValues(PreparedStatement ps, int i) throws SQLException {
-                    RouteRuleGroupModel model = models.get(i);
-                    ps.setLong(1, model.getRouteRuleId());
-                    ps.setLong(2, model.getGroupId());
-                    Integer unreleasedWeight = model.getUnreleasedWeight();
-                    if (unreleasedWeight == null) {
-                        ps.setString(3, null);
-                    } else {
-                        ps.setInt(3, unreleasedWeight);
-                    }
-                }
-
-                @Override
-                public int getBatchSize() {
-                    return models.size();
-                }
-            });
-    }
-
     protected void release(final List<RouteRuleGroupModel> models) {
         checkReleaseArgument(models);
         DataConfig.jdbcTemplate().batchUpdate(
@@ -162,37 +136,6 @@ public class RouteRuleGroupDao {
                     return models.size();
                 }
             });
-    }
-
-    protected void publish(final RouteRuleGroupModel... models) {
-        publish(Lists.newArrayList(models));
-    }
-
-    protected void publish(final List<RouteRuleGroupModel> models) {
-        checkInsertOrUpdateArgument(models);
-        DataConfig.jdbcTemplate()
-            .batchUpdate("insert into service_route_rule_group (route_rule_id, group_id, weight) values (?,?,?)"
-                + " on duplicate key update weight=?", new BatchPreparedStatementSetter() {
-                    @Override
-                    public void setValues(PreparedStatement ps, int i) throws SQLException {
-                        RouteRuleGroupModel model = models.get(i);
-                        ps.setLong(1, model.getRouteRuleId());
-                        ps.setLong(2, model.getGroupId());
-                        Integer weight = model.getWeight();
-                        if (weight == null) {
-                            ps.setString(3, null);
-                            ps.setString(4, null);
-                        } else {
-                            ps.setInt(3, weight);
-                            ps.setInt(4, weight);
-                        }
-                    }
-
-                    @Override
-                    public int getBatchSize() {
-                        return models.size();
-                    }
-                });
     }
 
     public List<RouteRuleGroupModel> select(RouteRuleGroupModel filter) {
@@ -260,7 +203,7 @@ public class RouteRuleGroupDao {
         });
     }
 
-    private void checkInsertOrUpdateArgument(List<RouteRuleGroupModel> models) {
+    private static void checkInsertOrUpdateArgument(List<RouteRuleGroupModel> models) {
         ValueCheckers.notNullOrEmpty(models, "models");
         for (RouteRuleGroupModel model : models) {
             ValueCheckers.notNull(model, "routeRuleGroup");
@@ -269,12 +212,351 @@ public class RouteRuleGroupDao {
         }
     }
 
-    private void checkReleaseArgument(List<RouteRuleGroupModel> models) {
+    private static void checkReleaseArgument(List<RouteRuleGroupModel> models) {
         ValueCheckers.notNullOrEmpty(models, "models");
         for (RouteRuleGroupModel model : models) {
             ValueCheckers.notNull(model, "routeRuleGroup");
             ValueCheckers.notNull(model.getRouteRuleId(), "routeRuleGroup.routeRuleId");
             ValueCheckers.notNull(model.getGroupId(), "routeRuleGroup.groupId");
+        }
+    }
+
+    // ========== Abstract Methods (database-specific) ==========
+
+    protected abstract void insertOrUpdate(RouteRuleGroupModel... models);
+
+    protected abstract void insertOrUpdate(List<RouteRuleGroupModel> models);
+
+    protected abstract void insert(RouteRuleGroupModel... models);
+
+    protected abstract void insert(List<RouteRuleGroupModel> models);
+
+    protected abstract void publish(RouteRuleGroupModel... models);
+
+    protected abstract void publish(List<RouteRuleGroupModel> models);
+
+    // ========== MySQL Implementation ==========
+
+    private static class MysqlRouteRuleGroupDao extends RouteRuleGroupDao {
+        @Override
+        protected void insertOrUpdate(RouteRuleGroupModel... models) {
+            insertOrUpdate(Lists.newArrayList(models));
+        }
+
+        @Override
+        protected void insertOrUpdate(final List<RouteRuleGroupModel> models) {
+            checkInsertOrUpdateArgument(models);
+            DataConfig.jdbcTemplate().batchUpdate(
+                "insert into service_route_rule_group (route_rule_id, group_id, unreleased_weight) values (?,?,?)"
+                    + " on duplicate key update unreleased_weight=?",
+                new BatchPreparedStatementSetter() {
+                    @Override
+                    public void setValues(PreparedStatement ps, int i) throws SQLException {
+                        RouteRuleGroupModel model = models.get(i);
+                        ps.setLong(1, model.getRouteRuleId());
+                        ps.setLong(2, model.getGroupId());
+                        Integer unreleasedWeight = model.getUnreleasedWeight();
+                        if (unreleasedWeight == null) {
+                            ps.setString(3, null);
+                            ps.setString(4, null);
+                        } else {
+                            ps.setInt(3, unreleasedWeight);
+                            ps.setInt(4, unreleasedWeight);
+                        }
+                    }
+
+                    @Override
+                    public int getBatchSize() {
+                        return models.size();
+                    }
+                });
+        }
+
+        @Override
+        protected void insert(RouteRuleGroupModel... models) {
+            insert(Lists.newArrayList(models));
+        }
+
+        @Override
+        protected void insert(final List<RouteRuleGroupModel> models) {
+            checkInsertOrUpdateArgument(models);
+            DataConfig.jdbcTemplate().batchUpdate(
+                "insert ignore into service_route_rule_group (route_rule_id, group_id, unreleased_weight) values (?,?,?)",
+                new BatchPreparedStatementSetter() {
+                    @Override
+                    public void setValues(PreparedStatement ps, int i) throws SQLException {
+                        RouteRuleGroupModel model = models.get(i);
+                        ps.setLong(1, model.getRouteRuleId());
+                        ps.setLong(2, model.getGroupId());
+                        Integer unreleasedWeight = model.getUnreleasedWeight();
+                        if (unreleasedWeight == null) {
+                            ps.setString(3, null);
+                        } else {
+                            ps.setInt(3, unreleasedWeight);
+                        }
+                    }
+
+                    @Override
+                    public int getBatchSize() {
+                        return models.size();
+                    }
+                });
+        }
+
+        @Override
+        protected void publish(RouteRuleGroupModel... models) {
+            publish(Lists.newArrayList(models));
+        }
+
+        @Override
+        protected void publish(final List<RouteRuleGroupModel> models) {
+            checkInsertOrUpdateArgument(models);
+            DataConfig.jdbcTemplate()
+                .batchUpdate("insert into service_route_rule_group (route_rule_id, group_id, weight) values (?,?,?)"
+                    + " on duplicate key update weight=?, unreleased_weight=NULL", new BatchPreparedStatementSetter() {
+                        @Override
+                        public void setValues(PreparedStatement ps, int i) throws SQLException {
+                            RouteRuleGroupModel model = models.get(i);
+                            ps.setLong(1, model.getRouteRuleId());
+                            ps.setLong(2, model.getGroupId());
+                            Integer weight = model.getWeight();
+                            if (weight == null) {
+                                ps.setString(3, null);
+                                ps.setString(4, null);
+                            } else {
+                                ps.setInt(3, weight);
+                                ps.setInt(4, weight);
+                            }
+                        }
+
+                        @Override
+                        public int getBatchSize() {
+                            return models.size();
+                        }
+                    });
+        }
+    }
+
+    // ========== Generic Implementation (for SQLite and others) ==========
+
+    private static class GenericRouteRuleGroupDao extends RouteRuleGroupDao {
+        @Override
+        protected void insertOrUpdate(RouteRuleGroupModel... models) {
+            insertOrUpdate(Lists.newArrayList(models));
+        }
+
+        @Override
+        protected void insertOrUpdate(final List<RouteRuleGroupModel> models) {
+            checkInsertOrUpdateArgument(models);
+            for (RouteRuleGroupModel model : models) {
+                upsert(model, "unreleased_weight");
+            }
+        }
+
+        @Override
+        protected void insert(RouteRuleGroupModel... models) {
+            insert(Lists.newArrayList(models));
+        }
+
+        @Override
+        protected void insert(final List<RouteRuleGroupModel> models) {
+            checkInsertOrUpdateArgument(models);
+            for (RouteRuleGroupModel model : models) {
+                insertIfNotExists(model);
+            }
+        }
+
+        @Override
+        protected void publish(RouteRuleGroupModel... models) {
+            publish(Lists.newArrayList(models));
+        }
+
+        @Override
+        protected void publish(final List<RouteRuleGroupModel> models) {
+            checkInsertOrUpdateArgument(models);
+            for (RouteRuleGroupModel model : models) {
+                publishOne(model);
+            }
+        }
+
+        /**
+         * Publish a single route rule group: set weight and clear unreleased_weight
+         */
+        private void publishOne(final RouteRuleGroupModel model) {
+            // Check if record exists
+            final String checkSql = "select id from service_route_rule_group where route_rule_id=? and group_id=?";
+            List<Long> existing = DataConfig.jdbcTemplate().query(new PreparedStatementCreator() {
+                @Override
+                public PreparedStatement createPreparedStatement(Connection conn) throws SQLException {
+                    PreparedStatement ps = conn.prepareStatement(checkSql);
+                    ps.setLong(1, model.getRouteRuleId());
+                    ps.setLong(2, model.getGroupId());
+                    return ps;
+                }
+            }, new RowMapper<Long>() {
+                @Override
+                public Long mapRow(ResultSet rs, int rowNum) throws SQLException {
+                    return rs.getLong(1);
+                }
+            });
+
+            if (existing.isEmpty()) {
+                // Insert new record with weight only (unreleased_weight defaults to NULL)
+                final String insertSql = "insert into service_route_rule_group (route_rule_id, group_id, weight) values (?,?,?)";
+                DataConfig.jdbcTemplate().update(new PreparedStatementCreator() {
+                    @Override
+                    public PreparedStatement createPreparedStatement(Connection conn) throws SQLException {
+                        PreparedStatement ps = conn.prepareStatement(insertSql);
+                        ps.setLong(1, model.getRouteRuleId());
+                        ps.setLong(2, model.getGroupId());
+                        Integer weight = model.getWeight();
+                        if (weight == null) {
+                            ps.setString(3, null);
+                        } else {
+                            ps.setInt(3, weight);
+                        }
+                        return ps;
+                    }
+                });
+            } else {
+                // Update existing record: set weight and clear unreleased_weight
+                final String updateSql = "update service_route_rule_group set weight=?, unreleased_weight=NULL where id=?";
+                DataConfig.jdbcTemplate().update(new PreparedStatementCreator() {
+                    @Override
+                    public PreparedStatement createPreparedStatement(Connection conn) throws SQLException {
+                        PreparedStatement ps = conn.prepareStatement(updateSql);
+                        Integer weight = model.getWeight();
+                        if (weight == null) {
+                            ps.setString(1, null);
+                        } else {
+                            ps.setInt(1, weight);
+                        }
+                        ps.setLong(2, existing.get(0));
+                        return ps;
+                    }
+                });
+            }
+        }
+
+        /**
+         * Database-agnostic upsert: check if record exists, then insert or update
+         */
+        private void upsert(final RouteRuleGroupModel model, final String updateField) {
+            // Check if record exists
+            final String checkSql = "select id from service_route_rule_group where route_rule_id=? and group_id=?";
+            List<Long> existing = DataConfig.jdbcTemplate().query(new PreparedStatementCreator() {
+                @Override
+                public PreparedStatement createPreparedStatement(Connection conn) throws SQLException {
+                    PreparedStatement ps = conn.prepareStatement(checkSql);
+                    ps.setLong(1, model.getRouteRuleId());
+                    ps.setLong(2, model.getGroupId());
+                    return ps;
+                }
+            }, new RowMapper<Long>() {
+                @Override
+                public Long mapRow(ResultSet rs, int rowNum) throws SQLException {
+                    return rs.getLong(1);
+                }
+            });
+
+            if (existing.isEmpty()) {
+                // Insert new record - only insert the field being updated (to match MySQL behavior)
+                final String insertSql;
+                if ("unreleased_weight".equals(updateField)) {
+                    insertSql = "insert into service_route_rule_group (route_rule_id, group_id, unreleased_weight) values (?,?,?)";
+                } else {
+                    insertSql = "insert into service_route_rule_group (route_rule_id, group_id, weight) values (?,?,?)";
+                }
+                DataConfig.jdbcTemplate().update(new PreparedStatementCreator() {
+                    @Override
+                    public PreparedStatement createPreparedStatement(Connection conn) throws SQLException {
+                        PreparedStatement ps = conn.prepareStatement(insertSql);
+                        ps.setLong(1, model.getRouteRuleId());
+                        ps.setLong(2, model.getGroupId());
+                        Integer value;
+                        if ("unreleased_weight".equals(updateField)) {
+                            value = model.getUnreleasedWeight();
+                        } else {
+                            value = model.getWeight();
+                        }
+                        if (value == null) {
+                            ps.setString(3, null);
+                        } else {
+                            ps.setInt(3, value);
+                        }
+                        return ps;
+                    }
+                });
+            } else {
+                // Update existing record - clear the other field when updating one
+                final String updateSql;
+                if ("unreleased_weight".equals(updateField)) {
+                    updateSql = "update service_route_rule_group set unreleased_weight=?, weight=NULL where id=?";
+                } else {
+                    updateSql = "update service_route_rule_group set weight=? where id=?";
+                }
+                DataConfig.jdbcTemplate().update(new PreparedStatementCreator() {
+                    @Override
+                    public PreparedStatement createPreparedStatement(Connection conn) throws SQLException {
+                        PreparedStatement ps = conn.prepareStatement(updateSql);
+                        Integer value;
+                        if ("weight".equals(updateField)) {
+                            value = model.getWeight();
+                        } else {
+                            value = model.getUnreleasedWeight();
+                        }
+                        if (value == null) {
+                            ps.setString(1, null);
+                        } else {
+                            ps.setInt(1, value);
+                        }
+                        ps.setLong(2, existing.get(0));
+                        return ps;
+                    }
+                });
+            }
+        }
+
+        /**
+         * Database-agnostic insert: only insert if record doesn't exist
+         */
+        private void insertIfNotExists(final RouteRuleGroupModel model) {
+            // Check if record exists
+            final String checkSql = "select id from service_route_rule_group where route_rule_id=? and group_id=?";
+            List<Long> existing = DataConfig.jdbcTemplate().query(new PreparedStatementCreator() {
+                @Override
+                public PreparedStatement createPreparedStatement(Connection conn) throws SQLException {
+                    PreparedStatement ps = conn.prepareStatement(checkSql);
+                    ps.setLong(1, model.getRouteRuleId());
+                    ps.setLong(2, model.getGroupId());
+                    return ps;
+                }
+            }, new RowMapper<Long>() {
+                @Override
+                public Long mapRow(ResultSet rs, int rowNum) throws SQLException {
+                    return rs.getLong(1);
+                }
+            });
+
+            if (existing.isEmpty()) {
+                // Insert new record only if not exists
+                final String insertSql = "insert into service_route_rule_group (route_rule_id, group_id, unreleased_weight) values (?,?,?)";
+                DataConfig.jdbcTemplate().update(new PreparedStatementCreator() {
+                    @Override
+                    public PreparedStatement createPreparedStatement(Connection conn) throws SQLException {
+                        PreparedStatement ps = conn.prepareStatement(insertSql);
+                        ps.setLong(1, model.getRouteRuleId());
+                        ps.setLong(2, model.getGroupId());
+                        Integer unreleasedWeight = model.getUnreleasedWeight();
+                        if (unreleasedWeight == null) {
+                            ps.setString(3, null);
+                        } else {
+                            ps.setInt(3, unreleasedWeight);
+                        }
+                        return ps;
+                    }
+                });
+            }
         }
     }
 }

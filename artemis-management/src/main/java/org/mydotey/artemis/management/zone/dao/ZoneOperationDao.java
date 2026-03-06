@@ -22,13 +22,45 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Created by fang_j on 10/07/2016.
+ * Abstract ZoneOperationDao with built-in factory method.
+ * <p>
+ * Use ZoneOperationDao.getInstance() to get the appropriate implementation:
+ * - MySQL: MysqlZoneOperationDao (batch + INSERT IGNORE)
+ * - SQLite/Other: GenericZoneOperationDao (check-exists-then-insert)
+ * <p>
+ * Database type is determined from configuration, no DB connection needed.
  */
-public class ZoneOperationDao {
-    public static final ZoneOperationDao INSTANCE = new ZoneOperationDao();
+public abstract class ZoneOperationDao {
 
-    private ZoneOperationDao() {
+    /**
+     * Holds the lazily-created singleton instance.
+     */
+    private static volatile ZoneOperationDao instance;
+
+    /**
+     * Get the appropriate ZoneOperationDao implementation based on configuration.
+     * Lazy initialization on first call.
+     */
+    public static ZoneOperationDao getInstance() {
+        if (instance == null) {
+            synchronized (ZoneOperationDao.class) {
+                if (instance == null) {
+                    if (DataConfig.isMySQL()) {
+                        instance = new MysqlZoneOperationDao();
+                    } else {
+                        instance = new GenericZoneOperationDao();
+                    }
+                }
+            }
+        }
+        return instance;
     }
+
+    
+
+    protected ZoneOperationDao() {}
+
+    // ========== Common Methods (all implementations share these) ==========
 
     public List<ZoneOperationModel> query() {
         return DataConfig.jdbcTemplate().query("select service_id, region_id, zone_id, operation from service_zone",
@@ -74,26 +106,7 @@ public class ZoneOperationDao {
         insertOrUpdate(Lists.newArrayList(operationModels));
     }
 
-    public void insertOrUpdate(final List<ZoneOperationModel> models) {
-        checkInsertOrUpdateArgument(models);
-        DataConfig.jdbcTemplate().batchUpdate(
-            "insert ignore into service_zone (service_id, region_id, zone_id, operation) values (?,?,?,?)",
-            new BatchPreparedStatementSetter() {
-                @Override
-                public void setValues(PreparedStatement ps, int i) throws SQLException {
-                    ZoneOperationModel zoneOperation = models.get(i);
-                    ps.setString(1, zoneOperation.getServiceId());
-                    ps.setString(2, zoneOperation.getRegionId());
-                    ps.setString(3, zoneOperation.getZoneId());
-                    ps.setString(4, zoneOperation.getOperation());
-                }
-
-                @Override
-                public int getBatchSize() {
-                    return models.size();
-                }
-            });
-    }
+    public abstract void insertOrUpdate(List<ZoneOperationModel> models);
 
     public List<ZoneOperationModel> select(ZoneOperationModel filter) {
         ValueCheckers.notNull(filter, "filter");
@@ -151,7 +164,7 @@ public class ZoneOperationDao {
         });
     }
 
-    private void checkInsertOrUpdateArgument(List<ZoneOperationModel> models) {
+    private static void checkInsertOrUpdateArgument(List<ZoneOperationModel> models) {
         ValueCheckers.notNullOrEmpty(models, "models");
         for (ZoneOperationModel model : models) {
             ValueCheckers.notNull(model, "zoneOperation");
@@ -159,6 +172,84 @@ public class ZoneOperationDao {
             ValueCheckers.notNullOrWhiteSpace(model.getRegionId(), "zoneOperation.regionId");
             ValueCheckers.notNullOrWhiteSpace(model.getZoneId(), "zoneOperation.zoneId");
             ValueCheckers.notNullOrWhiteSpace(model.getOperation(), "zoneOperation.operation");
+        }
+    }
+
+    // ========== MySQL Implementation ==========
+
+    private static class MysqlZoneOperationDao extends ZoneOperationDao {
+        @Override
+        public void insertOrUpdate(final List<ZoneOperationModel> models) {
+            checkInsertOrUpdateArgument(models);
+            DataConfig.jdbcTemplate().batchUpdate(
+                "insert ignore into service_zone (service_id, region_id, zone_id, operation) values (?,?,?,?)",
+                new BatchPreparedStatementSetter() {
+                    @Override
+                    public void setValues(PreparedStatement ps, int i) throws SQLException {
+                        ZoneOperationModel zoneOperation = models.get(i);
+                        ps.setString(1, zoneOperation.getServiceId());
+                        ps.setString(2, zoneOperation.getRegionId());
+                        ps.setString(3, zoneOperation.getZoneId());
+                        ps.setString(4, zoneOperation.getOperation());
+                    }
+
+                    @Override
+                    public int getBatchSize() {
+                        return models.size();
+                    }
+                });
+        }
+    }
+
+    // ========== Generic Implementation (for SQLite and others) ==========
+
+    private static class GenericZoneOperationDao extends ZoneOperationDao {
+        @Override
+        public void insertOrUpdate(final List<ZoneOperationModel> models) {
+            checkInsertOrUpdateArgument(models);
+            for (ZoneOperationModel model : models) {
+                insertIfNotExists(model);
+            }
+        }
+
+        /**
+         * Database-agnostic insert: only insert if record doesn't exist
+         */
+        private void insertIfNotExists(final ZoneOperationModel model) {
+            // Check if record exists
+            final String checkSql = "select id from service_zone where service_id=? and region_id=? and zone_id=? and operation=?";
+            List<Long> existing = DataConfig.jdbcTemplate().query(new PreparedStatementCreator() {
+                @Override
+                public PreparedStatement createPreparedStatement(Connection conn) throws SQLException {
+                    PreparedStatement ps = conn.prepareStatement(checkSql);
+                    ps.setString(1, model.getServiceId());
+                    ps.setString(2, model.getRegionId());
+                    ps.setString(3, model.getZoneId());
+                    ps.setString(4, model.getOperation());
+                    return ps;
+                }
+            }, new RowMapper<Long>() {
+                @Override
+                public Long mapRow(ResultSet rs, int rowNum) throws SQLException {
+                    return rs.getLong(1);
+                }
+            });
+
+            if (existing.isEmpty()) {
+                // Insert new record only if not exists
+                final String insertSql = "insert into service_zone (service_id, region_id, zone_id, operation) values (?,?,?,?)";
+                DataConfig.jdbcTemplate().update(new PreparedStatementCreator() {
+                    @Override
+                    public PreparedStatement createPreparedStatement(Connection conn) throws SQLException {
+                        PreparedStatement ps = conn.prepareStatement(insertSql);
+                        ps.setString(1, model.getServiceId());
+                        ps.setString(2, model.getRegionId());
+                        ps.setString(3, model.getZoneId());
+                        ps.setString(4, model.getOperation());
+                        return ps;
+                    }
+                });
+            }
         }
     }
 }

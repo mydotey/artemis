@@ -23,13 +23,45 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Created by fang_j on 10/07/2016.
+ * Abstract ServiceInstanceDao with built-in factory method.
+ * <p>
+ * Use ServiceInstanceDao.getInstance() to get the appropriate implementation:
+ * - MySQL: MysqlServiceInstanceDao (batch + ON DUPLICATE KEY UPDATE)
+ * - SQLite/Other: GenericServiceInstanceDao (check-exists-then-insert/update)
+ * <p>
+ * Database type is determined from configuration, no DB connection needed.
  */
-public class ServiceInstanceDao {
-    public static final ServiceInstanceDao INSTANCE = new ServiceInstanceDao();
+public abstract class ServiceInstanceDao {
 
-    private ServiceInstanceDao() {
+    /**
+     * Holds the lazily-created singleton instance.
+     */
+    private static volatile ServiceInstanceDao instance;
+
+    /**
+     * Get the appropriate ServiceInstanceDao implementation based on configuration.
+     * Lazy initialization on first call.
+     */
+    public static ServiceInstanceDao getInstance() {
+        if (instance == null) {
+            synchronized (ServiceInstanceDao.class) {
+                if (instance == null) {
+                    if (DataConfig.isMySQL()) {
+                        instance = new MysqlServiceInstanceDao();
+                    } else {
+                        instance = new GenericServiceInstanceDao();
+                    }
+                }
+            }
+        }
+        return instance;
     }
+
+    
+
+    protected ServiceInstanceDao() {}
+
+    // ========== Common Methods (all implementations share these) ==========
 
     public List<ServiceInstanceModel> query() {
         final String sql = "SELECT service_id, instance_id, ip, machine_name, metadata, port, protocol, region_id, zone_id, healthy_check_url, url, group_id from service_instance";
@@ -93,39 +125,6 @@ public class ServiceInstanceDao {
                     final ServiceInstanceModel filter = filters.get(i);
                     ps.setString(1, filter.getServiceId());
                     ps.setString(2, filter.getInstanceId());
-                }
-            });
-    }
-
-    protected void insertOrUpdate(final ServiceInstanceModel... groupInstances) {
-        insertOrUpdate(Lists.newArrayList(groupInstances));
-    }
-
-    protected void insertOrUpdate(final List<ServiceInstanceModel> models) {
-        checkInsertOrUpdateArgument(models);
-        DataConfig.jdbcTemplate().batchUpdate(
-            "insert into service_instance (service_id, instance_id, ip, machine_name, metadata, port, protocol, region_id, zone_id, healthy_check_url, url, description, group_id) values (?,?,?,?,?,?,?,?,?,?,?,?,?) on duplicate key "
-                +
-                "update  ip=?, machine_name=?, metadata=?, port=?, protocol=?, region_id=?, zone_id=?, healthy_check_url=?, url=?, description=?, group_id=?",
-            new BatchPreparedStatementSetter() {
-                @Override
-                public void setValues(PreparedStatement ps, int i) throws SQLException {
-                    ServiceInstanceModel model = models.get(i);
-                    Object[] params = new Object[] { model.getServiceId(), model.getInstanceId(),
-                        model.getIp(), model.getMachineName(), model.getMetadata(), model.getPort(),
-                        model.getProtocol(), model.getRegionId(), model.getZoneId(), model.getHealthCheckUrl(),
-                        model.getUrl(), model.getDescription(), model.getGroupId(),
-                        model.getIp(), model.getMachineName(), model.getMetadata(), model.getPort(),
-                        model.getProtocol(), model.getRegionId(), model.getZoneId(), model.getHealthCheckUrl(),
-                        model.getUrl(), model.getDescription(), model.getGroupId() };
-                    for (int index = 0; index < params.length; index++) {
-                        ps.setObject(index + 1, params[index]);
-                    }
-                }
-
-                @Override
-                public int getBatchSize() {
-                    return models.size();
                 }
             });
     }
@@ -214,6 +213,137 @@ public class ServiceInstanceDao {
             ValueCheckers.notNullOrWhiteSpace(model.getZoneId(), "serviceInstance.zoneId");
             ValueCheckers.notNullOrWhiteSpace(model.getHealthCheckUrl(), "serviceInstance.healthCheckUrl");
             ValueCheckers.notNullOrWhiteSpace(model.getGroupId(), "serviceInstance.groupId");
+        }
+    }
+
+    // ========== Abstract Methods (database-specific) ==========
+
+    protected abstract void insertOrUpdate(ServiceInstanceModel... groupInstances);
+
+    protected abstract void insertOrUpdate(List<ServiceInstanceModel> models);
+
+    // ========== MySQL Implementation ==========
+
+    private static class MysqlServiceInstanceDao extends ServiceInstanceDao {
+        @Override
+        protected void insertOrUpdate(ServiceInstanceModel... groupInstances) {
+            insertOrUpdate(Lists.newArrayList(groupInstances));
+        }
+
+        @Override
+        protected void insertOrUpdate(final List<ServiceInstanceModel> models) {
+            checkInsertOrUpdateArgument(models);
+            DataConfig.jdbcTemplate().batchUpdate(
+                "insert into service_instance (service_id, instance_id, ip, machine_name, metadata, port, protocol, region_id, zone_id, healthy_check_url, url, description, group_id) values (?,?,?,?,?,?,?,?,?,?,?,?,?) on duplicate key "
+                    +
+                    "update  ip=?, machine_name=?, metadata=?, port=?, protocol=?, region_id=?, zone_id=?, healthy_check_url=?, url=?, description=?, group_id=?",
+                new BatchPreparedStatementSetter() {
+                    @Override
+                    public void setValues(PreparedStatement ps, int i) throws SQLException {
+                        ServiceInstanceModel model = models.get(i);
+                        Object[] params = new Object[] { model.getServiceId(), model.getInstanceId(),
+                            model.getIp(), model.getMachineName(), model.getMetadata(), model.getPort(),
+                            model.getProtocol(), model.getRegionId(), model.getZoneId(), model.getHealthCheckUrl(),
+                            model.getUrl(), model.getDescription(), model.getGroupId(),
+                            model.getIp(), model.getMachineName(), model.getMetadata(), model.getPort(),
+                            model.getProtocol(), model.getRegionId(), model.getZoneId(), model.getHealthCheckUrl(),
+                            model.getUrl(), model.getDescription(), model.getGroupId() };
+                        for (int index = 0; index < params.length; index++) {
+                            ps.setObject(index + 1, params[index]);
+                        }
+                    }
+
+                    @Override
+                    public int getBatchSize() {
+                        return models.size();
+                    }
+                });
+        }
+    }
+
+    // ========== Generic Implementation (for SQLite and others) ==========
+
+    private static class GenericServiceInstanceDao extends ServiceInstanceDao {
+        @Override
+        protected void insertOrUpdate(ServiceInstanceModel... groupInstances) {
+            insertOrUpdate(Lists.newArrayList(groupInstances));
+        }
+
+        @Override
+        protected void insertOrUpdate(final List<ServiceInstanceModel> models) {
+            checkInsertOrUpdateArgument(models);
+            for (ServiceInstanceModel model : models) {
+                upsert(model);
+            }
+        }
+
+        /**
+         * Database-agnostic upsert: check if record exists, then insert or update
+         */
+        private void upsert(final ServiceInstanceModel model) {
+            // Check if record exists
+            final String checkSql = "select id from service_instance where service_id=? and instance_id=?";
+            List<Long> existing = DataConfig.jdbcTemplate().query(new PreparedStatementCreator() {
+                @Override
+                public PreparedStatement createPreparedStatement(Connection conn) throws SQLException {
+                    PreparedStatement ps = conn.prepareStatement(checkSql);
+                    ps.setString(1, model.getServiceId());
+                    ps.setString(2, model.getInstanceId());
+                    return ps;
+                }
+            }, new RowMapper<Long>() {
+                @Override
+                public Long mapRow(ResultSet rs, int rowNum) throws SQLException {
+                    return rs.getLong(1);
+                }
+            });
+
+            if (existing.isEmpty()) {
+                // Insert new record
+                final String insertSql = "insert into service_instance (service_id, instance_id, ip, machine_name, metadata, port, protocol, region_id, zone_id, healthy_check_url, url, description, group_id) values (?,?,?,?,?,?,?,?,?,?,?,?,?)";
+                DataConfig.jdbcTemplate().update(new PreparedStatementCreator() {
+                    @Override
+                    public PreparedStatement createPreparedStatement(Connection conn) throws SQLException {
+                        PreparedStatement ps = conn.prepareStatement(insertSql);
+                        ps.setString(1, model.getServiceId());
+                        ps.setString(2, model.getInstanceId());
+                        ps.setString(3, model.getIp());
+                        ps.setString(4, model.getMachineName());
+                        ps.setString(5, model.getMetadata());
+                        ps.setInt(6, model.getPort());
+                        ps.setString(7, model.getProtocol());
+                        ps.setString(8, model.getRegionId());
+                        ps.setString(9, model.getZoneId());
+                        ps.setString(10, model.getHealthCheckUrl());
+                        ps.setString(11, model.getUrl());
+                        ps.setString(12, model.getDescription());
+                        ps.setString(13, model.getGroupId());
+                        return ps;
+                    }
+                });
+            } else {
+                // Update existing record
+                final String updateSql = "update service_instance set ip=?, machine_name=?, metadata=?, port=?, protocol=?, region_id=?, zone_id=?, healthy_check_url=?, url=?, description=?, group_id=? where id=?";
+                DataConfig.jdbcTemplate().update(new PreparedStatementCreator() {
+                    @Override
+                    public PreparedStatement createPreparedStatement(Connection conn) throws SQLException {
+                        PreparedStatement ps = conn.prepareStatement(updateSql);
+                        ps.setString(1, model.getIp());
+                        ps.setString(2, model.getMachineName());
+                        ps.setString(3, model.getMetadata());
+                        ps.setInt(4, model.getPort());
+                        ps.setString(5, model.getProtocol());
+                        ps.setString(6, model.getRegionId());
+                        ps.setString(7, model.getZoneId());
+                        ps.setString(8, model.getHealthCheckUrl());
+                        ps.setString(9, model.getUrl());
+                        ps.setString(10, model.getDescription());
+                        ps.setString(11, model.getGroupId());
+                        ps.setLong(12, existing.get(0));
+                        return ps;
+                    }
+                });
+            }
         }
     }
 }

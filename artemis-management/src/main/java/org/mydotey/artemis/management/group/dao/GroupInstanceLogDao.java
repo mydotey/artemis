@@ -27,9 +27,20 @@ import java.util.Set;
  * Created by fang_j on 10/07/2016.
  */
 public class GroupInstanceLogDao {
-    public static final GroupInstanceLogDao INSTANCE = new GroupInstanceLogDao();
+    private static volatile GroupInstanceLogDao INSTANCE;
 
     private GroupInstanceLogDao() {
+    }
+
+    public static GroupInstanceLogDao getInstance() {
+        if (INSTANCE == null) {
+            synchronized (GroupInstanceLogDao.class) {
+                if (INSTANCE == null) {
+                    INSTANCE = new GroupInstanceLogDao();
+                }
+            }
+        }
+        return INSTANCE;
     }
 
     public List<GroupInstanceLog> select(GroupInstanceLogModel filter) {

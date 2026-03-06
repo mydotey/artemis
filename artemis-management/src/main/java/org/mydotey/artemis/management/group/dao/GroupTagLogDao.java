@@ -22,9 +22,20 @@ import java.util.List;
  * Created by fang_j on 10/07/2016.
  */
 public class GroupTagLogDao {
-    public static final GroupTagLogDao INSTANCE = new GroupTagLogDao();
+    private static volatile GroupTagLogDao INSTANCE;
 
     private GroupTagLogDao() {
+    }
+
+    public static GroupTagLogDao getInstance() {
+        if (INSTANCE == null) {
+            synchronized (GroupTagLogDao.class) {
+                if (INSTANCE == null) {
+                    INSTANCE = new GroupTagLogDao();
+                }
+            }
+        }
+        return INSTANCE;
     }
 
     public List<GroupTagLog> query(final String condition, final Object... args) {
