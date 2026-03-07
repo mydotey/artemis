@@ -40,13 +40,13 @@ public final class DeploymentConfig {
         _deploymentEnv = StringExtension.isBlank(_deploymentEnv) ? null : _deploymentEnv.trim().toLowerCase();
 
         List<ConfigurationSource> sources = new ArrayList<>();
-        sources.add(SimpleConfigurationSources.newEnvironmentVariableSource());
-        sources.add(SimpleConfigurationSources.newSystemPropertiesSource());
+        sources.add(SimpleConfigurationSources.newPropertiesFileSource(PROPERTIES_FILE_NAME));
         if (!StringExtension.isBlank(_deploymentEnv)) {
             sources.add(SimpleConfigurationSources
-                .newPropertiesFileSource(PROPERTIES_FILE_NAME + "-" + DeploymentConfig.deploymentEnv()));
+                    .newPropertiesFileSource(PROPERTIES_FILE_NAME + "-" + DeploymentConfig.deploymentEnv()));
         }
-        sources.add(SimpleConfigurationSources.newPropertiesFileSource(PROPERTIES_FILE_NAME));
+        sources.add(SimpleConfigurationSources.newSystemPropertiesSource());
+        sources.add(SimpleConfigurationSources.newEnvironmentVariableSource());
         ConfigurationManager manager = ConfigurationManagers.newManager("deployment", sources);
         _properties = new StringProperties(manager);
     }
@@ -59,9 +59,9 @@ public final class DeploymentConfig {
     private static Property<String, String> _zoneIdProperty = _properties.getStringProperty(ZONE_ID_PROPERTY_KEY);
     private static Property<String, String> _appIdProperty = _properties.getStringProperty(APPID_PROPERTY_KEY);
     private static Property<String, Integer> _portProperty = _properties.getIntProperty(
-        PORT_PROPERTY_KEY, 8080, v -> v >= 1 && v <= 65535 ? v : null);
+            PORT_PROPERTY_KEY, 8080, v -> v >= 1 && v <= 65535 ? v : null);
     private static Property<String, String> _protocolProperty = _properties.getStringProperty(PROTOCOL_PROPERTY_KEY,
-        "http");
+            "http");
     private static Property<String, String> _pathProperty = _properties.getStringProperty(PATH_PROPERTY_KEY);
 
     private static String _regionId;
@@ -125,9 +125,9 @@ public final class DeploymentConfig {
 
     private static void logDeploymentInfo() {
         _logger.info(
-            "DeploymentConfig is initialized. deploymentEnv: {}, regionId: {}, zoneId: {}, appId: {}, machineName: {}"
-                + ", ip: {}, port: {}, protocol: {}, path: {}",
-            _deploymentEnv, _regionId, _zoneId, _appId, _machineName, _ip, _port, _protocol, _path);
+                "DeploymentConfig is initialized. deploymentEnv: {}, regionId: {}, zoneId: {}, appId: {}, machineName: {}"
+                        + ", ip: {}, port: {}, protocol: {}, path: {}",
+                _deploymentEnv, _regionId, _zoneId, _appId, _machineName, _ip, _port, _protocol, _path);
     }
 
     private DeploymentConfig() {
